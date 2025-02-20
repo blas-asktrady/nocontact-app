@@ -1,9 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+};
+
+interface ActionButtonProps {
+  icon: string;
+  label: string;
+  color: string;
+}
 
 const ChatScreen = () => {
-  const ActionButton = ({ icon, label, color }) => (
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const ActionButton = ({ icon, label, color }: ActionButtonProps) => (
     <TouchableOpacity style={styles.actionButton}>
       <View style={[styles.actionIcon, { backgroundColor: color }]}>
         <Text style={styles.actionEmoji}>{icon}</Text>
@@ -16,7 +28,7 @@ const ChatScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Feather name="chevron-left" size={24} color="#000" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.voiceChatButton}>

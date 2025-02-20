@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Stack } from 'expo-router';
 import { CustomTabBar } from './components/CustomTabBar';
 
 export default function TabLayout() {
@@ -27,9 +27,8 @@ export default function TabLayout() {
           title: 'Learn',
         }}
       />
-      {/* Hidden chat screen for routing */}
       <Tabs.Screen 
-        name="chat"
+        name="settings"
         options={{
           href: null,
         }}

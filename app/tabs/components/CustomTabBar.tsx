@@ -176,6 +176,8 @@ function getIconName(routeName: string): string {
       return 'pencil';
     case 'learn':
       return 'book-outline';
+    case 'settings':
+      return 'cog-outline';
     default:
       return 'cog-outline';
   }
