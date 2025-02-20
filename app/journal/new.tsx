@@ -4,13 +4,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
-// Define the root stack param list with the correct routes
 type RootStackParamList = {
   'journal/new': undefined;
+  'journal/edit': {
+    content?: string;
+    id?: string;
+  };
   'tabs': {
     screen?: string;
   };
-  // Add other routes as needed
 };
 
 type NavigationProps = NavigationProp<RootStackParamList, 'journal/new'>;
@@ -21,18 +23,14 @@ export default function NewJournalScreen() {
 
   const navigateBack = () => {
     try {
-      // First try to go back
       const canGoBack = navigation.canGoBack();
-      
       if (canGoBack) {
         navigation.goBack();
       } else {
-        // If we can't go back, redirect to tabs with journal screen
         navigation.navigate('tabs', { screen: 'journal' });
       }
     } catch (error) {
       console.error('Navigation error:', error);
-      // If all else fails, try to navigate to tabs
       try {
         navigation.navigate('tabs', { screen: 'journal' });
       } catch (fallbackError) {
@@ -49,6 +47,13 @@ export default function NewJournalScreen() {
     navigateBack();
   };
 
+  const handleInputPress = () => {
+    console.log('Input pressed');
+    navigation.navigate('journal/edit', {
+      content: journalEntry
+    });
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
@@ -58,17 +63,25 @@ export default function NewJournalScreen() {
         </ThemedText>
       </View>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Write about your recovery journey, thoughts, and feelings..."
-          placeholderTextColor="#8E8E93"
-          multiline
-          textAlignVertical="top"
-          value={journalEntry}
-          onChangeText={setJournalEntry}
-        />
-      </View>
+      <TouchableOpacity 
+        style={styles.inputContainer}
+        onPress={handleInputPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="Write about your recovery journey, thoughts, and feelings..."
+            placeholderTextColor="#8E8E93"
+            multiline
+            textAlignVertical="top"
+            value={journalEntry}
+            onChangeText={setJournalEntry}
+            editable={false}
+            pointerEvents="box-none"
+          />
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
@@ -111,9 +124,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginBottom: 16,
+  },
+  inputWrapper: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E5EA',
