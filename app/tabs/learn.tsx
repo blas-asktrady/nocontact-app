@@ -1,41 +1,80 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+
+type RootStackParamList = {
+  'learn/[id]': {
+    id: number;
+    article: typeof articles[0];
+  };
+};
+
+type NavigationProps = NavigationProp<RootStackParamList>;
 
 const LearnScreen = () => {
+  const navigation = useNavigation<NavigationProps>();
+
   const articles = [
     {
       id: 1,
       title: 'How to know if you have a problem',
       duration: '9 min',
-      type: 'Article'
+      type: 'Article',
+      author: {
+        name: 'Emily Jacobson',
+        role: 'Education Lead @ Sunflower',
+        avatar: require('@/assets/images/react-logo.png')
+      },
+      content: 'The journey to understanding addiction begins with recognizing the signs...',
+      audioUrl: '/path/to/audio1.mp3'
     },
     {
       id: 2,
       title: 'Why Is Admitting the Problem Powerful?',
       duration: '10 min',
-      type: 'Article'
+      type: 'Article',
+      author: {
+        name: 'Emily Jacobson',
+        role: 'Education Lead @ Sunflower',
+        avatar: require('@/assets/images/react-logo.png')
+      },
+      content: 'The journey to recovery often begins with a simple yet profound step: admitting theres a problem. It\'s a decision that, though challenging, can spark remarkable transformation...',
+      audioUrl: '/path/to/audio2.mp3'
     },
     {
       id: 3,
       title: 'How Do You Actually "Admit the Problem"?',
       duration: '9 min',
-      type: 'Article'
+      type: 'Article',
+      author: {
+        name: 'Emily Jacobson',
+        role: 'Education Lead @ Sunflower',
+        avatar: require('@/assets/images/react-logo.png')
+      },
+      content: 'Taking the step to admit a problem requires both courage and strategy...',
+      audioUrl: '/path/to/audio3.mp3'
     }
   ];
 
-  const ArticleCard = ({ title, duration, type }) => (
-    <TouchableOpacity style={styles.articleCard}>
+  const ArticleCard = ({ article }: { article: typeof articles[0] }) => (
+    <TouchableOpacity 
+      style={styles.articleCard}
+      onPress={() => navigation.navigate('learn/[id]', { 
+        id: article.id,
+        article: article
+      })}
+    >
       <View style={styles.iconContainer}>
         <Feather name="file-text" size={24} color="#4B69FF" />
       </View>
       <View style={styles.articleInfo}>
-        <Text style={styles.articleTitle}>{title}</Text>
+        <Text style={styles.articleTitle}>{article.title}</Text>
         <View style={styles.articleMeta}>
           <Feather name="clock" size={16} color="#666" />
-          <Text style={styles.metaText}>{duration}</Text>
+          <Text style={styles.metaText}>{article.duration}</Text>
           <Text style={styles.metaDivider}>|</Text>
-          <Text style={styles.metaText}>{type}</Text>
+          <Text style={styles.metaText}>{article.type}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -62,9 +101,7 @@ const LearnScreen = () => {
         {articles.map((article) => (
           <ArticleCard
             key={article.id}
-            title={article.title}
-            duration={article.duration}
-            type={article.type}
+            article={article}
           />
         ))}
       </View>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 const JournalScreen = () => {
