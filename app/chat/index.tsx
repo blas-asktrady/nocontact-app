@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type RootStackParamList = {
+  Voice: undefined;
 };
 
 interface ActionButtonProps {
@@ -24,6 +25,10 @@ const ChatScreen = () => {
     </TouchableOpacity>
   );
 
+  const handleVoiceChat = () => {
+    navigation.navigate('chat/voice');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -31,7 +36,10 @@ const ChatScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Feather name="chevron-left" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.voiceChatButton}>
+        <TouchableOpacity 
+          style={styles.voiceChatButton}
+          onPress={handleVoiceChat}
+        >
           <Feather name="phone" size={20} color="#FFF" style={styles.phoneIcon} />
           <Text style={styles.voiceChatText}>Start Voice Chat</Text>
         </TouchableOpacity>

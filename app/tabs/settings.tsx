@@ -91,6 +91,46 @@ const SettingsScreen = () => {
           hasArrow
         />
       </View>
+
+      {/* Help Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>HELP</Text>
+        <SettingsItem
+          icon="message-square"
+          title="Share Product Feedback"
+          hasArrow
+        />
+        <SettingsItem
+          icon="help-circle"
+          title="Support"
+          hasArrow
+        />
+        <SettingsItem
+          icon="lock"
+          title="Manage Subscription"
+          hasArrow
+        />
+      </View>
+
+      {/* Legal Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>LEGAL</Text>
+        <SettingsItem
+          icon="file-text"
+          title="Terms of Service"
+          hasArrow
+        />
+        <SettingsItem
+          icon="shield"
+          title="Privacy Policy"
+          hasArrow
+        />
+      </View>
+
+      {/* Delete Account */}
+      <TouchableOpacity style={styles.deleteAccount}>
+        <Text style={styles.deleteAccountText}>Delete Account</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -171,6 +211,15 @@ const styles = StyleSheet.create({
   settingsItemTitle: {
     fontSize: 17,
     color: '#000000',
+  },
+  deleteAccount: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  deleteAccountText: {
+    color: '#FF3B30',
+    fontSize: 17,
   },
 });
 
