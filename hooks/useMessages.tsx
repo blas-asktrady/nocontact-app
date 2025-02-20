@@ -5,7 +5,7 @@ import { getMessagesForChat, addMessageToChat, createChat } from '../services/ch
 export interface Message {
     id?: string
     content: string
-    senderType: sender
+    senderType: string
     senderId: string
     receiverId: string
     createdAt: string
@@ -20,20 +20,16 @@ interface MessagesContextType {
         message: Message,
         userId: string,
         title: string,
-        assetType: asset_type,
-        assetName: string,
         llm: string,
         isUpdate?: boolean,
     ) => Promise<string>
     chatId: string | null
-    setChatId: React.Dispatch<React.SetStateAction<string | null>>
+    setChatId: (newChatId: string | null) => void
     isChatEmpty: boolean
     clearChat: () => void
     createNewChat: (
         userId: string,
         title: string,
-        assetType: asset_type,
-        assetName: string,
         llm: string,
         message: Message,
     ) => Promise<string | null>
@@ -43,8 +39,6 @@ interface MessagesContextType {
         message: Message,
         userId: string,
         title: string,
-        assetType: asset_type,
-        assetName: string,
         llm: string,
     ) => Promise<void>
 }
@@ -104,13 +98,11 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [chatId, shouldFetchMessages])
 
     const createNewChat = useCallback(
-        async (userId: string, title: string, assetType: asset_type, assetName: string, llm: string, message: Message) => {
+        async (userId: string, title: string, llm: string, message: Message) => {
             try {
                 const newChatId = await createChat(
                     userId,
                     title,
-                    assetType,
-                    assetName,
                     llm,
                     message.content,
                     message.senderType,
@@ -156,7 +148,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [chatId, messageQueue])
 
     const addNewMessage = useCallback(
-        async (message: Message, userId: string, title: string, assetType: asset_type, assetName: string, llm: string): Promise<string> => {
+        async (message: Message, userId: string, title: string, llm: string): Promise<string> => {
             const messageWithId = { ...message, id: crypto.randomUUID() }
 
             if (chatId) {
@@ -177,7 +169,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
                 isFirstMessageSent.current = true
                 setMessages((prevMessages) => [...prevMessages, messageWithId])
                 try {
-                    const newChatId = await createNewChat(userId, title, assetType, assetName, llm, messageWithId)
+                    const newChatId = await createNewChat(userId, title, llm, messageWithId)
                     setChatId(newChatId)
                 } catch (err) {
                     console.error('Error creating new chat:', err)
@@ -205,7 +197,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [])
 
     const addCompleteLLMResponseMessage = useCallback(
-        async (message: Message, userId: string, title: string, assetType: asset_type, assetName: string, llm: string) => {
+        async (message: Message, userId: string, title: string, llm: string) => {
             if (chatId) {
                 await addMessageToChat(
                     chatId,
@@ -216,7 +208,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
                     message.tokensUsed || 0,
                 )
             } else if (!isFirstMessageSent.current) {
-                const newChatId = await createNewChat(userId, title, assetType, assetName, llm, message)
+                const newChatId = await createNewChat(userId, title, llm, message)
                 setChatId(newChatId)
                 isFirstMessageSent.current = true
             } else {

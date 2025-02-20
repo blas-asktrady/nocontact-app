@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { JournalProvider } from '@/hooks/useJournal';
 import { ChatsProvider } from '@/hooks/useChats';
 import { UserProvider } from '@/hooks/useUser';
+import { MessagesProvider } from '@/hooks/useMessages';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,55 +32,57 @@ export default function RootLayout() {
   return (
     <UserProvider>
       <ChatsProvider>
-        <JournalProvider>
-          <ThemeProvider value={DefaultTheme}>
-            <Stack screenOptions={{
-              headerShown: false,
-            }}>
-              {/* Non-authenticated stack screens */}
-              <Stack.Screen 
-                name="index" 
-                options={{
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen 
-                name="survey" 
-                options={{
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen 
-                name="onboarding" 
-                options={{
-                  headerShown: false,
-                }}
-              />
-              
-              {/* Authenticated tab navigation */}
-              <Stack.Screen 
-                name="(tabs)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-              
-              {/* Modal screens */}
-              <Stack.Screen 
-                name="(modals)/not-found" 
-                options={{ 
-                  title: 'Oops!',
-                  headerShown: true,
-                  presentation: 'modal',
-                  headerTitleStyle: {
-                    fontFamily: 'SpaceMono',
-                  },
-                }} 
-              />
-            </Stack>
-            <StatusBar style="dark" />
-          </ThemeProvider>
-        </JournalProvider>
+        <MessagesProvider>
+          <JournalProvider>
+            <ThemeProvider value={DefaultTheme}>
+              <Stack screenOptions={{
+                headerShown: false,
+              }}>
+                {/* Non-authenticated stack screens */}
+                <Stack.Screen 
+                  name="index" 
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen 
+                  name="survey" 
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen 
+                  name="onboarding" 
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                
+                {/* Authenticated tab navigation */}
+                <Stack.Screen 
+                  name="(tabs)"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                
+                {/* Modal screens */}
+                <Stack.Screen 
+                  name="(modals)/not-found" 
+                  options={{ 
+                    title: 'Oops!',
+                    headerShown: true,
+                    presentation: 'modal',
+                    headerTitleStyle: {
+                      fontFamily: 'SpaceMono',
+                    },
+                  }} 
+                />
+              </Stack>
+              <StatusBar style="dark" />
+            </ThemeProvider>
+          </JournalProvider>
+        </MessagesProvider>
       </ChatsProvider>
     </UserProvider>
   );
