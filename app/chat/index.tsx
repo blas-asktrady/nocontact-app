@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Image, FlatList } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useMessages, Message } from '@/hooks/useMessages';
 
 type RootStackParamList = {
   Voice: undefined;
+  'chat/voice': undefined;
   tabs: {
     screen?: string;
   };
@@ -14,10 +16,20 @@ interface ActionButtonProps {
   icon: string;
   label: string;
   color: string;
+  onPress?: () => void;
 }
 
 const ChatScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { messages, addNewMessage } = useMessages();
+  const [inputText, setInputText] = useState('');
+  const flatListRef = React.useRef<FlatList>(null);
+
+  const scrollToBottom = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  };
 
   const navigateBack = () => {
     try {
@@ -37,8 +49,8 @@ const ChatScreen = () => {
     }
   };
 
-  const ActionButton = ({ icon, label, color }: ActionButtonProps) => (
-    <TouchableOpacity style={styles.actionButton}>
+  const ActionButton = ({ icon, label, color, onPress }: ActionButtonProps) => (
+    <TouchableOpacity style={styles.actionButton} onPress={onPress}>
       <View style={[styles.actionIcon, { backgroundColor: color }]}>
         <Text style={styles.actionEmoji}>{icon}</Text>
       </View>
@@ -48,6 +60,65 @@ const ChatScreen = () => {
 
   const handleVoiceChat = () => {
     navigation.navigate('chat/voice');
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const newMessage: Message = {
+      content: inputText,
+      senderType: 'user',
+      senderId: 'user123',
+      receiverId: 'ai123',
+      createdAt: new Date().toISOString(),
+    };
+
+    await addNewMessage(newMessage, 'user123', 'Chat with Sam', 'default-llm');
+    setInputText('');
+    scrollToBottom();
+  };
+
+  const handleQuickAction = (actionText: string) => {
+    setInputText(actionText);
+    
+    const newMessage: Message = {
+      content: actionText,
+      senderType: 'user',
+      senderId: 'user123',
+      receiverId: 'ai123',
+      createdAt: new Date().toISOString(),
+    };
+
+    addNewMessage(newMessage, 'user123', 'Chat with Sam', 'default-llm');
+    setInputText('');
+    scrollToBottom();
+  };
+
+  const renderMessage = ({ item }: { item: Message }) => {
+    const isUserMessage = item.senderType === 'user';
+    
+    return (
+      <View style={[
+        styles.messageRow,
+        isUserMessage && styles.userMessageRow
+      ]}>
+        {!isUserMessage && (
+          <Image 
+            source={require('@/assets/images/react-logo.png')} 
+            style={styles.avatar}
+            defaultSource={require('@/assets/images/react-logo.png')}
+          />
+        )}
+        <View style={[
+          styles.messageBubble,
+          isUserMessage && styles.userMessageBubble
+        ]}>
+          <Text style={styles.messageText}>
+            {item.content}
+          </Text>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -68,30 +139,46 @@ const ChatScreen = () => {
 
       {/* Chat Container */}
       <View style={styles.chatContainer}>
-        {/* Message */}
-        <View style={styles.messageRow}>
-          <Image 
-            source={require('@/assets/images/react-logo.png')} 
-            style={styles.avatar}
-            defaultSource={require('@/assets/images/react-logo.png')}
-          />
-          <View style={styles.messageBubble}>
-            <Text style={styles.messageText}>
-              Hello, I'm Sam! I'm going to be your AI sponsor. I'm here to help keep you sober. 
-              You can talk to me when you're struggling with cravings or want someone to talk to! 
-              Just curious, what brought you to this app?
-            </Text>
-          </View>
-        </View>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id || item.createdAt}
+          contentContainerStyle={styles.chatContentContainer}
+          onContentSizeChange={scrollToBottom}
+          onLayout={scrollToBottom}
+          showsVerticalScrollIndicator={false}
+          indicatorStyle="black"
+          automaticallyAdjustKeyboardInsets={true}
+          maintainVisibleContentPosition={{
+            minIndexForVisible: 0,
+            autoscrollToTopThreshold: 10,
+          }}
+        />
       </View>
 
       {/* Bottom Section */}
       <View style={styles.bottomSection}>
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <ActionButton icon="🆘" label="Help with cravings" color="#FFE5E5" />
-          <ActionButton icon="😤" label="Need to vent" color="#FFF4E5" />
-          <ActionButton icon="🎉" label="Celebrate" color="#E5F6FF" />
+          <ActionButton 
+            icon="🆘" 
+            label="Help with cravings" 
+            color="#FFE5E5" 
+            onPress={() => handleQuickAction("I need help with cravings right now.")}
+          />
+          <ActionButton 
+            icon="😤" 
+            label="Need to vent" 
+            color="#FFF4E5" 
+            onPress={() => handleQuickAction("I need to vent about something.")}
+          />
+          <ActionButton 
+            icon="🎉" 
+            label="Celebrate" 
+            color="#E5F6FF" 
+            onPress={() => handleQuickAction("I want to celebrate a milestone!")}
+          />
         </View>
 
         {/* Input Bar */}
@@ -100,9 +187,17 @@ const ChatScreen = () => {
             style={styles.input}
             placeholder="Type a message..."
             placeholderTextColor="#A3A3A3"
+            value={inputText}
+            onChangeText={setInputText}
+            returnKeyType="send"
+            onSubmitEditing={handleSendMessage}
           />
-          <TouchableOpacity style={styles.micButton}>
-            <Feather name="mic" size={24} color="#4B69FF" />
+          <TouchableOpacity 
+            style={styles.micButton}
+            onPress={handleSendMessage}
+            disabled={!inputText.trim()}
+          >
+            <Feather name="send" size={24} color={inputText.trim() ? "#4B69FF" : "#A3A3A3"} />
           </TouchableOpacity>
         </View>
       </View>
@@ -142,9 +237,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  chatContentContainer: {
+    flexGrow: 1,
+  },
   messageRow: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 8,
+    alignItems: 'flex-start',
+  },
+  userMessageRow: {
+    flexDirection: 'row-reverse',
   },
   avatar: {
     width: 40,
@@ -158,9 +260,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     maxWidth: '80%',
   },
+  userMessageBubble: {
+    backgroundColor: '#4B69FF',
+    marginRight: 12,
+  },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
+    color: '#FFFFFF',
+  },
+  userMessageText: {
+    color: '#FFFFFF',
   },
   bottomSection: {
     padding: 16,
