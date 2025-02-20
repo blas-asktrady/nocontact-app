@@ -1,17 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { router } from 'expo-router';
+import { useJournal } from '@/hooks/useJournal';
 
 const JournalScreen = () => {
-  // Static journals array with timestamp data
-  const journals = [
-    {
-      id: '1',
-      timestamp: 1708473600000, // February 20, 2025 in milliseconds
-      description: 'This is a test',
-      type: 'entry',
-    },
-  ];
+  const { journals } = useJournal();
+
+  // Add a useEffect to monitor journals changes
+  React.useEffect(() => {
+    console.log('Journals updated:', journals);
+  }, [journals]);
 
   // Format timestamp to display date
   const formatDisplayDate = (timestamp: number) => {
@@ -32,16 +30,33 @@ const JournalScreen = () => {
     router.push('/journal/new');
   };
 
+  // Handle entry press
+  const handleEntryPress = (entry: typeof journals[0]) => {
+    router.push({
+      pathname: '/journal/new',
+      params: {
+        id: entry.id,
+        timestamp: entry.timestamp,
+        description: entry.description,
+        type: entry.type,
+        content: entry.content
+      }
+    });
+  };
+
   // Render each journal entry
-  const renderJournalEntry = ({ item }: { item: typeof journals[0] }) => (
-    <View style={styles.entryContainer}>
+  const renderJournalEntry = React.useCallback(({ item }: { item: typeof journals[0] }) => (
+    <TouchableOpacity 
+      style={styles.entryContainer}
+      onPress={() => handleEntryPress(item)}
+    >
       <View style={styles.entryHeader}>
         <Text style={styles.entryDate}>{formatDisplayDate(item.timestamp)}</Text>
       </View>
       <Text style={styles.entryDescription}>{item.description}</Text>
       <Text style={styles.entryTimestamp}>{formatShortDate(item.timestamp)}</Text>
-    </View>
-  );
+    </TouchableOpacity>
+  ), []);
 
   return (
     <View style={styles.container}>
@@ -60,6 +75,7 @@ const JournalScreen = () => {
         keyExtractor={item => item.id}
         style={styles.list}
         showsVerticalScrollIndicator={false}
+        extraData={journals}
       />
     </View>
   );

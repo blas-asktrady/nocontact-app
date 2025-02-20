@@ -5,6 +5,9 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type RootStackParamList = {
   Voice: undefined;
+  tabs: {
+    screen?: string;
+  };
 };
 
 interface ActionButtonProps {
@@ -15,6 +18,24 @@ interface ActionButtonProps {
 
 const ChatScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const navigateBack = () => {
+    try {
+      const canGoBack = navigation.canGoBack();
+      if (canGoBack) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('tabs', { screen: 'home' });
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      try {
+        navigation.navigate('tabs', { screen: 'home' });
+      } catch (fallbackError) {
+        console.error('Fallback navigation failed:', fallbackError);
+      }
+    }
+  };
 
   const ActionButton = ({ icon, label, color }: ActionButtonProps) => (
     <TouchableOpacity style={styles.actionButton}>
@@ -33,7 +54,7 @@ const ChatScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={navigateBack}>
           <Feather name="chevron-left" size={24} color="#000" />
         </TouchableOpacity>
         <TouchableOpacity 

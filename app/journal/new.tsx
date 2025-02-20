@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useJournal } from '@/hooks/useJournal';
 
 type RootStackParamList = {
   'journal/new': undefined;
   'journal/edit': {
     content?: string;
     id?: string;
+    timestamp?: number;
+    description?: string;
+    type?: string;
   };
   'tabs': {
     screen?: string;
@@ -17,9 +22,37 @@ type RootStackParamList = {
 
 type NavigationProps = NavigationProp<RootStackParamList, 'journal/new'>;
 
+type RouteParams = {
+  id?: string;
+  timestamp?: number;
+  description?: string;
+  type?: string;
+  content?: string;
+};
+
 export default function NewJournalScreen() {
   const navigation = useNavigation<NavigationProps>();
+  const route = useRoute();
+  const params = route.params as RouteParams;
+  const { addEntry, updateEntry, deleteEntry } = useJournal();
+
   const [journalEntry, setJournalEntry] = useState('');
+  const [entryId, setEntryId] = useState<string | undefined>();
+  const [timestamp, setTimestamp] = useState<number | undefined>();
+  const [description, setDescription] = useState<string | undefined>();
+  const [type, setType] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (params) {
+      setEntryId(params.id);
+      setTimestamp(params.timestamp);
+      setDescription(params.description);
+      setType(params.type);
+      if (params.content) {
+        setJournalEntry(params.content);
+      }
+    }
+  }, [params]);
 
   const navigateBack = () => {
     try {
@@ -40,6 +73,31 @@ export default function NewJournalScreen() {
   };
 
   const handleSave = () => {
+    console.log('new journal save clicked');
+    if (journalEntry.trim() === '') {
+      Alert.alert('Error', 'Please enter some content for your journal entry');
+      return;
+    }
+
+    if (entryId) {
+      console.log('update entry');
+      // Update existing entry
+      updateEntry({
+        id: entryId,
+        timestamp: timestamp || Date.now(),
+        description: description || journalEntry.slice(0, 100), // First 100 chars as description
+        type: type || 'entry',
+        content: journalEntry
+      });
+    } else {
+      console.log('add entry');
+      // Add new entry
+      addEntry({
+        description: journalEntry.slice(0, 100), // First 100 chars as description
+        type: 'entry',
+        content: journalEntry
+      });
+    }
     navigateBack();
   };
 
@@ -47,27 +105,71 @@ export default function NewJournalScreen() {
     navigateBack();
   };
 
-  const handleInputPress = () => {
-    console.log('Input pressed');
+  const handleEdit = () => {
     navigation.navigate('journal/edit', {
-      content: journalEntry
+      content: journalEntry,
+      id: entryId,
+      timestamp: timestamp,
+      description: description,
+      type: type
     });
+  };
+
+  const handleDelete = () => {
+    if (!entryId) return;
+
+    Alert.alert(
+      'Delete Entry',
+      'Are you sure you want to delete this journal entry?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteEntry(entryId);
+            navigateBack();
+          }
+        }
+      ]
+    );
   };
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Journal Entry</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          Write freely about your recovery journey, thoughts, and feelings.
-        </ThemedText>
+        <View style={styles.titleContainer}>
+          <ThemedText style={styles.title}>
+            {entryId ? 'Edit Journal Entry' : 'New Journal Entry'}
+          </ThemedText>
+        </View>
+        
+        {entryId && (
+          <View style={styles.iconContainer}>
+            <TouchableOpacity 
+              onPress={handleEdit}
+              style={styles.iconButton}
+            >
+              <Pencil size={24} color="#6366F1" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={handleDelete}
+              style={styles.iconButton}
+            >
+              <Trash2 size={24} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      <TouchableOpacity 
-        style={styles.inputContainer}
-        onPress={handleInputPress}
-        activeOpacity={0.7}
-      >
+      <ThemedText style={styles.subtitle}>
+        Write freely about your recovery journey, thoughts, and feelings.
+      </ThemedText>
+
+      <View style={styles.inputContainer}>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
@@ -77,11 +179,9 @@ export default function NewJournalScreen() {
             textAlignVertical="top"
             value={journalEntry}
             onChangeText={setJournalEntry}
-            editable={false}
-            pointerEvents="box-none"
           />
         </View>
-      </TouchableOpacity>
+      </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
@@ -108,8 +208,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    padding: 4,
   },
   title: {
     fontSize: 34,
@@ -121,6 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#8E8E93',
     marginBottom: 16,
+    paddingHorizontal: 16,
   },
   inputContainer: {
     flex: 1,

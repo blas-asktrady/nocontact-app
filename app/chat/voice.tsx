@@ -6,12 +6,33 @@ import { ChevronLeft } from 'lucide-react';
 
 type RootStackParamList = {
   'chat/voice': undefined;
+  tabs: {
+    screen?: string;
+  };
 };
 
 const VoiceChatScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [isListening, setIsListening] = useState(false);
   const [timer, setTimer] = useState(0);
+
+  const navigateBack = () => {
+    try {
+      const canGoBack = navigation.canGoBack();
+      if (canGoBack) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('tabs', { screen: 'home' });
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      try {
+        navigation.navigate('tabs', { screen: 'home' });
+      } catch (fallbackError) {
+        console.error('Fallback navigation failed:', fallbackError);
+      }
+    }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -40,8 +61,8 @@ const VoiceChatScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ChevronLeft size={24} color="#000000" />
+        <TouchableOpacity onPress={navigateBack}>
+          <ChevronLeft size={24} color="#000000" />
         </TouchableOpacity>
         <View style={styles.timerContainer}>
           <Text style={styles.timer}>{formatTime(timer)}</Text>
