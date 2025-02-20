@@ -64,7 +64,7 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
       </View>
 
       {/* Centered Chat Button */}
-      <Link href="/tabs/chat" asChild>
+      <Link href="/chat" asChild>
         <TouchableOpacity style={styles.chatButton}>
           <View style={styles.chatButtonInner}>
             <MaterialCommunityIcons name="bee" size={32} color="#FFFFFF" />
