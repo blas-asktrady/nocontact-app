@@ -1,4 +1,3 @@
-// app/(tabs)/components/CustomTabBar.tsx
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,6 +12,8 @@ interface CustomTabBarProps {
 }
 
 export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
+  const visibleRoutes = state.routes.filter((route: any) => route.name !== 'chat');
+  
   return (
     <View style={styles.container}>
       {/* Curved Background */}
@@ -23,7 +24,7 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
 
       {/* Tab Buttons */}
       <View style={styles.tabsContainer}>
-        {state.routes.map((route: any, index: number) => {
+        {visibleRoutes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const label = options.tabBarLabel ?? options.title ?? route.name;
           const isFocused = state.index === index;
@@ -63,12 +64,11 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
       </View>
 
       {/* Centered Chat Button */}
-      <Link href="/chat" asChild>
+      <Link href="/tabs/chat" asChild>
         <TouchableOpacity style={styles.chatButton}>
           <View style={styles.chatButtonInner}>
             <MaterialCommunityIcons name="bee" size={32} color="#FFFFFF" />
           </View>
-          <View style={styles.chatButtonBackground} />
         </TouchableOpacity>
       </Link>
     </View>
@@ -77,6 +77,7 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
     height: 85,
     position: 'relative',
   },
@@ -86,6 +87,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 85,
+    width: '100%',
   },
   background: {
     position: 'absolute',
@@ -119,17 +121,18 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     height: '100%',
-    paddingHorizontal: 16,
+    width: '100%',
+    paddingHorizontal: 20,
   },
   tab: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
     paddingTop: 10,
+    flex: 1,
   },
   label: {
     fontFamily: 'SpaceMono',
@@ -138,22 +141,14 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    bottom: 35, // Increased to move button higher
+    width: 70,
+    height: 70,
+    bottom: 40,
     left: '50%',
-    marginLeft: -40,
+    marginLeft: -35,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-  },
-  chatButtonBackground: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#ffffff',
-    borderRadius: 40,
-    zIndex: -1,
   },
   chatButtonInner: {
     width: 70,
@@ -181,9 +176,7 @@ function getIconName(routeName: string): string {
       return 'pencil';
     case 'learn':
       return 'book-outline';
-    case 'settings':
-      return 'cog-outline';
     default:
-      return 'alert-circle-outline';
+      return 'cog-outline';
   }
 }

@@ -1,4 +1,3 @@
-// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
 import { CustomTabBar } from './components/CustomTabBar';
 
@@ -28,10 +27,11 @@ export default function TabLayout() {
           title: 'Learn',
         }}
       />
+      {/* Hidden chat screen for routing */}
       <Tabs.Screen 
-        name="settings"
+        name="chat"
         options={{
-          title: 'Settings',
+          href: null,
         }}
       />
     </Tabs>
