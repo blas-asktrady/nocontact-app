@@ -1,18 +1,18 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+// app/_layout.tsx
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, Tabs } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -28,12 +28,52 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+    <ThemeProvider value={DefaultTheme}>
+      <Stack screenOptions={{
+        headerShown: false,
+      }}>
+        {/* Non-authenticated stack screens */}
+        <Stack.Screen 
+          name="index" 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="survey" 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="onboarding" 
+          options={{
+            headerShown: false,
+          }}
+        />
+        
+        {/* Authenticated tab navigation */}
+        <Stack.Screen 
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+        
+        {/* Modal screens */}
+        <Stack.Screen 
+          name="(modals)/not-found" 
+          options={{ 
+            title: 'Oops!',
+            headerShown: true,
+            presentation: 'modal',
+            headerTitleStyle: {
+              fontFamily: 'SpaceMono',
+            },
+          }} 
+        />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }
