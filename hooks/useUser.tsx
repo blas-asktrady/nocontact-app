@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 
@@ -9,19 +9,25 @@ interface User {
   daysCounter: number;
 }
 
-export const useUser = () => {
+interface UserContextType {
+  user: User | null;
+  isLoading: boolean;
+  signInWithApple: () => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
     checkExistingSession();
   }, []);
 
   const checkExistingSession = async () => {
     try {
-      // Here you would typically check for stored credentials
-      // and validate them with your backend
       const storedUser = await localStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
@@ -42,11 +48,6 @@ export const useUser = () => {
         ],
       });
 
-      // Here you would typically:
-      // 1. Send the credential to your backend
-      // 2. Get user data back
-      // 3. Store the session token
-      
       const userData: User = {
         id: credential.user,
         email: credential.email || '',
@@ -59,7 +60,6 @@ export const useUser = () => {
       router.push('/');
     } catch (error) {
       if (error.code === 'ERR_CANCELED') {
-        // Handle user cancellation
         console.log('User cancelled Apple authentication');
       } else {
         console.error('Apple authentication failed:', error);
@@ -82,10 +82,24 @@ export const useUser = () => {
     }
   };
 
-  return {
-    user,
-    isLoading,
-    signInWithApple,
-    signOut,
-  };
+  return (
+    <UserContext.Provider
+      value={{
+        user,
+        isLoading,
+        signInWithApple,
+        signOut,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
 };
+
+export const useUser = (): UserContextType => {
+  const context = useContext(UserContext)
+  if (context === undefined) {
+      throw new Error('useUser must be used within a UserProvider')
+  }
+  return context
+}

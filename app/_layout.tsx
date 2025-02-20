@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { JournalProvider } from '@/hooks/useJournal';
+import { ChatsProvider } from '@/hooks/useChats';
+import { UserProvider } from '@/hooks/useUser';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -27,54 +29,58 @@ export default function RootLayout() {
   }
 
   return (
-    <JournalProvider>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{
-          headerShown: false,
-        }}>
-          {/* Non-authenticated stack screens */}
-          <Stack.Screen 
-            name="index" 
-            options={{
+    <UserProvider>
+      <ChatsProvider>
+        <JournalProvider>
+          <ThemeProvider value={DefaultTheme}>
+            <Stack screenOptions={{
               headerShown: false,
-            }}
-          />
-          <Stack.Screen 
-            name="survey" 
-            options={{
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen 
-            name="onboarding" 
-            options={{
-              headerShown: false,
-            }}
-          />
-          
-          {/* Authenticated tab navigation */}
-          <Stack.Screen 
-            name="(tabs)"
-            options={{
-              headerShown: false,
-            }}
-          />
-          
-          {/* Modal screens */}
-          <Stack.Screen 
-            name="(modals)/not-found" 
-            options={{ 
-              title: 'Oops!',
-              headerShown: true,
-              presentation: 'modal',
-              headerTitleStyle: {
-                fontFamily: 'SpaceMono',
-              },
-            }} 
-          />
-        </Stack>
-        <StatusBar style="dark" />
-      </ThemeProvider>
-    </JournalProvider>
+            }}>
+              {/* Non-authenticated stack screens */}
+              <Stack.Screen 
+                name="index" 
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen 
+                name="survey" 
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen 
+                name="onboarding" 
+                options={{
+                  headerShown: false,
+                }}
+              />
+              
+              {/* Authenticated tab navigation */}
+              <Stack.Screen 
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              
+              {/* Modal screens */}
+              <Stack.Screen 
+                name="(modals)/not-found" 
+                options={{ 
+                  title: 'Oops!',
+                  headerShown: true,
+                  presentation: 'modal',
+                  headerTitleStyle: {
+                    fontFamily: 'SpaceMono',
+                  },
+                }} 
+              />
+            </Stack>
+            <StatusBar style="dark" />
+          </ThemeProvider>
+        </JournalProvider>
+      </ChatsProvider>
+    </UserProvider>
   );
 }
