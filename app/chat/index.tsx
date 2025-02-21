@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Imag
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useMessages, Message } from '@/hooks/useMessages';
+import { Header } from './components/Header';
 
 type RootStackParamList = {
   Voice: undefined;
@@ -123,20 +124,8 @@ const ChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={navigateBack}>
-          <Feather name="chevron-left" size={24} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.voiceChatButton}
-          onPress={handleVoiceChat}
-        >
-          <Feather name="phone" size={20} color="#FFF" style={styles.phoneIcon} />
-          <Text style={styles.voiceChatText}>Start Voice Chat</Text>
-        </TouchableOpacity>
-      </View>
-
+      <Header onVoiceChat={handleVoiceChat} />
+      
       {/* Chat Container */}
       <View style={styles.chatContainer}>
         <FlatList
@@ -209,29 +198,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  voiceChatButton: {
-    backgroundColor: '#000000',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  phoneIcon: {
-    marginRight: 8,
-  },
-  voiceChatText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
   },
   chatContainer: {
     flex: 1,
