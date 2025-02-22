@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { useJournal } from '@/hooks/useJournal';
+import { getUserById } from '@/services/userService';
 
 const JournalScreen = () => {
   const { journals } = useJournal();
@@ -77,6 +78,12 @@ const JournalScreen = () => {
         showsVerticalScrollIndicator={false}
         extraData={journals}
       />
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => getUserById('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')}
+      >
+        <Text style={styles.buttonText}>Get User</Text>
+      </TouchableOpacity>
     </View>
   );
 };

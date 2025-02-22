@@ -43,7 +43,9 @@ module.exports = () => ({
     // Add the new environment configuration here
     extra: {
       apiUrl: process.env.API_URL || "https://default-api-url.com",
-      environment: process.env.NODE_ENV || "development"
+      environment: process.env.NODE_ENV || "development",
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
     }
   }
 });
