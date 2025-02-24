@@ -4,17 +4,21 @@ import { useUser } from '@/hooks/useUser';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // Import vector icons for Apple logo
 import { AntDesign as AppleIcon } from '@expo/vector-icons';
 // Import a custom component for the Google logo
 import GoogleLogo from '@/components/ui/GoogleLogo';
+// Import necessary authentication modules from Expo
+import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
 
 const { height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { user, signInWithApple, signInWithGoogle } = useUser();
   const slideAnim = useRef(new Animated.Value(height)).current;
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -22,10 +26,36 @@ export default function HomeScreen() {
       duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, []);
-
+    
+    // Check if user is logged in and navigate if needed
+    if (user) {
+      console.log('User is logged in:', user);
+      // Don't auto-redirect if we're already on the dashboard
+      if (window.location.pathname !== '/survey') {
+        router.push('/survey');
+      }
+    } else {
+      console.log('User is not logged in');
+    }
+  }, [user]);
+  
   const handleGetStarted = () => {
     router.push('/survey');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsAuthenticating(true);
+      // Use the signInWithGoogle method from useUser, which now properly handles redirects
+      await signInWithGoogle();
+      
+      // No need to set isAuthenticating to false here as the page will redirect and reload
+      // The useUser hook now handles the redirect and session setup
+    } catch (error) {
+      console.error('Error with Google sign in:', error);
+      setIsAuthenticating(false);
+    }
+    // Don't use finally block as the page will redirect and reload
   };
 
   // Check if the app is running in a web browser
@@ -92,11 +122,16 @@ export default function HomeScreen() {
             {/* Show Google Sign-in button only in browser */}
             {isRunningInBrowser && (
               <ThemedView 
-                style={styles.googleButton}
-                onTouchEnd={signInWithGoogle}
+                style={[
+                  styles.googleButton,
+                  isAuthenticating && styles.disabledButton
+                ]}
+                onTouchEnd={() => isAuthenticating ? undefined : handleGoogleSignIn()}
               >
                 <GoogleLogo size={20} />
-                <ThemedText style={styles.googleButtonText}>Sign in with Google</ThemedText>
+                <ThemedText style={styles.googleButtonText}>
+                  {isAuthenticating ? 'Signing in...' : 'Sign in with Google'}
+                </ThemedText>
               </ThemedView>
             )}
           </ThemedView>
@@ -107,6 +142,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Styles remain the same as in your original file
   container: {
     flex: 1,
   },
@@ -251,5 +287,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     color: '#3C4043',
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });

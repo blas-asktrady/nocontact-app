@@ -100,7 +100,7 @@ const SurveyScreen = () => {
       <HedgehogIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Hi! I'm Spiky, your healing companion. What's your name?
+          Hi! I'm Kufu, your healing companion. What's your name?
         </Text>
       </View>
       <TextInput
