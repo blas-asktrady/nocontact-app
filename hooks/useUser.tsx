@@ -221,12 +221,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithApple = async () => {
     try {
       setIsLoading(true);
+      console.log('Starting Apple sign-in process...');
       
       // Use Supabase Apple OAuth provider with direct browser redirect
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
           redirectTo: window.location.origin,
+          // Apple-specific options
+          scopes: 'name email',
+          // Add additional parameters as needed
+          queryParams: {
+            response_mode: 'form_post', // This helps with session establishment on some platforms
+            response_type: 'code'       // Use authorization code flow for better security
+          }
         }
       });
 
@@ -234,6 +242,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
+      console.log('Redirecting to Apple authentication...');
       // Supabase will handle the redirect in the same window
       
     } catch (error: any) {

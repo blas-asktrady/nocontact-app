@@ -4,10 +4,10 @@ import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const HedgehogIcon = () => (
+const SupportIcon = () => (
   <Image
     source={require('@/assets/images/react-logo.png')}
-    style={styles.hedgehogIcon}
+    style={styles.supportIcon}
   />
 );
 
@@ -15,9 +15,9 @@ const SurveyScreen = () => {
   // Track all answers in a single state object
   const [answers, setAnswers] = useState({
     name: '',
-    relationshipType: '',
-    breakupDate: '',
-    healingGoal: '',
+    depressionDuration: '',
+    lastEpisodeDate: '',
+    primaryGoal: '',
     wantsTips: false
   });
 
@@ -27,7 +27,7 @@ const SurveyScreen = () => {
   const handleDateChange = (event: any, selectedDate: any) => {
     setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
-      setAnswers({ ...answers, breakupDate: selectedDate.toISOString() });
+      setAnswers({ ...answers, lastEpisodeDate: selectedDate.toISOString() });
     }
   };
 
@@ -37,11 +37,11 @@ const SurveyScreen = () => {
       case 1:
         return answers.name.trim().length > 0;
       case 2:
-        return answers.relationshipType !== '';
+        return answers.depressionDuration !== '';
       case 3:
-        return answers.breakupDate !== '';
+        return answers.lastEpisodeDate !== '';
       case 4:
-        return answers.healingGoal !== '';
+        return answers.primaryGoal !== '';
       case 5:
         return answers.wantsTips !== null;
       default:
@@ -71,13 +71,13 @@ const SurveyScreen = () => {
         updatedAnswers.name = '';
         break;
       case 2:
-        updatedAnswers.relationshipType = '';
+        updatedAnswers.depressionDuration = '';
         break;
       case 3:
-        updatedAnswers.breakupDate = '';
+        updatedAnswers.lastEpisodeDate = '';
         break;
       case 4:
-        updatedAnswers.healingGoal = '';
+        updatedAnswers.primaryGoal = '';
         break;
       case 5:
         updatedAnswers.wantsTips = false;
@@ -89,7 +89,7 @@ const SurveyScreen = () => {
     }
   };
 
-  const handleChoiceAndNavigate = (choice) => {
+  const handleChoiceAndNavigate = (choice: boolean) => {
     setAnswers({ ...answers, wantsTips: choice });
     // Navigate to tabs/home
     router.replace('/tabs/home');
@@ -97,10 +97,10 @@ const SurveyScreen = () => {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <HedgehogIcon />
+      <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Hi! I'm Kufu, your healing companion. What's your name?
+          Hi! I'm Kufu, your panda buddy. I'm here to help you create a healthier lifestyle. What's your name?
         </Text>
       </View>
       <TextInput
@@ -115,28 +115,28 @@ const SurveyScreen = () => {
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <HedgehogIcon />
+      <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          What type of relationship ended?
+          How long have you been experiencing depression?
         </Text>
       </View>
       {[
-        'Long-term (1+ years)',
-        'Short-term',
-        'Marriage',
-        'Situationship',
-        `It's complicated`
-      ].map((type) => (
+        'Less than a month',
+        '1-3 months',
+        '3-6 months',
+        '6-12 months',
+        'More than a year'
+      ].map((duration) => (
         <TouchableOpacity
-          key={type}
+          key={duration}
           style={[
-            styles.relationshipButton,
-            answers.relationshipType === type && styles.selectedButton
+            styles.durationButton,
+            answers.depressionDuration === duration && styles.selectedButton
           ]}
-          onPress={() => setAnswers({ ...answers, relationshipType: type })}
+          onPress={() => setAnswers({ ...answers, depressionDuration: duration })}
         >
-          <Text style={styles.relationshipText}>{type}</Text>
+          <Text style={styles.durationText}>{duration}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -144,9 +144,9 @@ const SurveyScreen = () => {
 
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
-      <HedgehogIcon />
+      <SupportIcon />
       <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>When did it end?</Text>
+        <Text style={styles.messageText}>When did your most recent depressive episode begin?</Text>
       </View>
       <TouchableOpacity 
         style={styles.dateButton}
@@ -155,11 +155,11 @@ const SurveyScreen = () => {
         <Text style={styles.dateButtonText}>Pick date</Text>
       </TouchableOpacity>
       <Text style={styles.dateText}>
-        {answers.breakupDate ? new Date(answers.breakupDate).toLocaleDateString() : ''}
+        {answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate).toLocaleDateString() : ''}
       </Text>
       {showPicker && (
         <DateTimePicker
-          value={answers.breakupDate ? new Date(answers.breakupDate) : new Date()}
+          value={answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate) : new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}
@@ -171,22 +171,21 @@ const SurveyScreen = () => {
 
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
-      <HedgehogIcon />
+      <SupportIcon />
       <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>What's your main goal?</Text>
+        <Text style={styles.messageText}>What's your primary goal right now?</Text>
       </View>
       <View style={styles.goalOptionsContainer}>
         {[
-          'Move on',
-          'Understand why',
-          'Build self-love',
-          'Stay no-contact',
-          'All of these'
+          'Manage symptoms',
+          'Understand causes',
+          'Build coping skills',
+          'Improve daily functioning',
         ].map((goal) => (
           <TouchableOpacity
             key={goal}
-            style={[styles.goalButton, answers.healingGoal === goal && styles.selectedButton]}
-            onPress={() => setAnswers({ ...answers, healingGoal: goal })}
+            style={[styles.goalButton, answers.primaryGoal === goal && styles.selectedButton]}
+            onPress={() => setAnswers({ ...answers, primaryGoal: goal })}
           >
             <Text style={styles.goalText}>{goal}</Text>
           </TouchableOpacity>
@@ -197,10 +196,10 @@ const SurveyScreen = () => {
 
   const renderStep5 = () => (
     <View style={styles.stepContainer}>
-      <HedgehogIcon />
+      <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Want daily healing tips from me?
+          Would you like to receive daily mental wellness tips?
         </Text>
       </View>
       <Image
@@ -218,7 +217,7 @@ const SurveyScreen = () => {
           style={[styles.choiceButton, styles.primaryButton]}
           onPress={() => handleChoiceAndNavigate(true)}
         >
-          <Text style={styles.primaryButtonText}>Yes!</Text>
+          <Text style={styles.primaryButtonText}>Yes, please</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -324,7 +323,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
-  hedgehogIcon: {
+  supportIcon: {
     width: 48,
     height: 48,
     marginBottom: 16,
@@ -350,7 +349,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     backgroundColor: '#FFFFFF',
   },
-  relationshipButton: {
+  durationButton: {
     padding: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -362,22 +361,9 @@ const styles = StyleSheet.create({
     borderColor: '#4F46E5',
     backgroundColor: '#EEF2FF',
   },
-  relationshipText: {
+  durationText: {
     fontSize: 16,
     color: '#1F2937',
-  },
-  somethingElseButton: {
-    padding: 16,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  somethingElseText: {
-    color: '#6B7280',
-    textAlign: 'center',
-    fontSize: 16,
   },
   dateButton: {
     backgroundColor: '#4F46E5',
