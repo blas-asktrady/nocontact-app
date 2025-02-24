@@ -7,11 +7,15 @@ module.exports = () => ({
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "myapp",
+    scheme: "nocontact",  // Updated to match the app name
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
+      bundleIdentifier: "ai.nocontact.app",
+      config: {
+        usesAppleSignIn: true
+      }
     },
     android: {
       adaptiveIcon: {
@@ -35,7 +39,9 @@ module.exports = () => ({
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin", // Add if you want Google sign-in
+      "expo-apple-authentication"  // Added for Apple authentication
     ],
     experiments: {
       typedRoutes: true

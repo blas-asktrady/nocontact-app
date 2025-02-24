@@ -5,11 +5,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
+// Import vector icons for Apple logo
+import { AntDesign as AppleIcon } from '@expo/vector-icons';
+// Import a custom component for the Google logo
+import GoogleLogo from '@/components/ui/GoogleLogo';
 
 const { height } = Dimensions.get('window');
 
 export default function HomeScreen() {
-  const { user, signInWithApple } = useUser();
+  const { user, signInWithApple, signInWithGoogle } = useUser();
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
@@ -23,6 +27,9 @@ export default function HomeScreen() {
   const handleGetStarted = () => {
     router.push('/survey');
   };
+
+  // Check if the app is running in a web browser
+  const isRunningInBrowser = Platform.OS === 'web';
 
   return (
     <ThemedView style={styles.container}>
@@ -46,36 +53,52 @@ export default function HomeScreen() {
         ]}
       >
         <ThemedView style={styles.content}>
-          <ThemedView style={styles.header}>
-            <ThemedText style={styles.title}>Welcome to the ultimate{'\n'}no contact counter 🙅</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Your journey to recovery starts here,{'\n'}ready to begin?
-            </ThemedText>
-          </ThemedView>
+          {/* Main content area */}
+          <ThemedView style={styles.mainContent}>
+            <ThemedView style={styles.header}>
+              <ThemedText style={styles.title}>Meet your new{'\n'}buddy, Kufu</ThemedText>
+              <ThemedView style={styles.buddyCircle}>
+                <ThemedText style={styles.buddyEmoji}>🐼</ThemedText>
+              </ThemedView>
+              <ThemedText style={styles.subtitle}>Feel better every day</ThemedText>
+            </ThemedView>
 
-          <ThemedView style={styles.stats}>
-            <ThemedView style={styles.rating}>
+            <ThemedView style={styles.stats}>
               <ThemedText style={styles.ratingText}>⭐️⭐️⭐️⭐️⭐️</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.achievementContainer}>
-              <ThemedText style={styles.achievementText}>+3,000,000 days of no contact</ThemedText>
+              <ThemedText style={styles.achievementText}>Helped 3M+ people feel happier</ThemedText>
             </ThemedView>
           </ThemedView>
 
+          {/* Button area fixed at bottom */}
           <ThemedView style={styles.buttons}>
             <ThemedView 
               style={styles.primaryButton}
               onTouchEnd={handleGetStarted}
             >
-              <ThemedText style={styles.primaryButtonText}>Get Started</ThemedText>
+              <ThemedText style={styles.primaryButtonText}>Skip Sign In</ThemedText>
             </ThemedView>
             
-            <ThemedView 
-              style={styles.secondaryButton}
-              onTouchEnd={signInWithApple}
-            >
-              <ThemedText style={styles.secondaryButtonText}>or Sign in with Apple</ThemedText>
-            </ThemedView>
+            {/* Show Apple Sign-in button only on iOS */}
+            {!isRunningInBrowser && (
+              <ThemedView 
+                style={styles.appleButton}
+                onTouchEnd={signInWithApple}
+              >
+                <AppleIcon name="apple1" size={18} color="#FFFFFF" style={styles.appleIcon} />
+                <ThemedText style={styles.appleButtonText}>Sign in with Apple</ThemedText>
+              </ThemedView>
+            )}
+            
+            {/* Show Google Sign-in button only in browser */}
+            {isRunningInBrowser && (
+              <ThemedView 
+                style={styles.googleButton}
+                onTouchEnd={signInWithGoogle}
+              >
+                <GoogleLogo size={20} />
+                <ThemedText style={styles.googleButtonText}>Sign in with Google</ThemedText>
+              </ThemedView>
+            )}
           </ThemedView>
         </ThemedView>
       </Animated.View>
@@ -105,8 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    height: '60%',
-    paddingTop: 20,
+    height: '50%', // Further reduced height to minimize bottom white space
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -118,76 +140,116 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'space-between',
-    padding: 24,
+    padding: 20,
+    paddingTop: 16,
+    paddingBottom: 12, // Reduced bottom padding
+    backgroundColor: 'transparent',
+    justifyContent: 'space-between', // Puts buttons at bottom
+  },
+  mainContent: {
     backgroundColor: 'transparent',
   },
   header: {
-    marginBottom: 20,
+    alignItems: 'center',
     backgroundColor: 'transparent',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
     color: '#000000',
-    lineHeight: 38,
+    lineHeight: 34,
+  },
+  buddyCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  buddyEmoji: {
+    fontSize: 28,
   },
   subtitle: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#000000',
     opacity: 0.7,
-    lineHeight: 28,
   },
   stats: {
     alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: 'transparent',
-  },
-  rating: {
-    marginBottom: 16,
+    marginTop: 16, // Small space after header
     backgroundColor: 'transparent',
   },
   ratingText: {
-    fontSize: 24,
-    letterSpacing: 4,
-  },
-  achievementContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'transparent',
+    fontSize: 20,
+    letterSpacing: 3,
+    marginBottom: 8,
   },
   achievementText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#666666',
     fontWeight: '500',
+    textAlign: 'center',
   },
   buttons: {
-    gap: 16,
-    marginBottom: Platform.select({ ios: 48, android: 24 }),
+    gap: 6,
     backgroundColor: 'transparent',
+    marginBottom: 8, // Add a small margin to prevent buttons from being too close to bottom edge
   },
   primaryButton: {
     backgroundColor: '#4169E1',
     borderRadius: 30,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
+    marginBottom: 6,
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
   },
-  secondaryButton: {
+  appleButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    backgroundColor: '#000000',
+    borderRadius: 50,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+    height: 50,
+    marginBottom: 6,
   },
-  secondaryButtonText: {
-    color: '#666666',
-    fontSize: 16,
+  appleIcon: {
+    marginRight: 8,
+  },
+  appleButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: '#FFFFFF',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#DADCE0',
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: '#3C4043',
   },
 });

@@ -2,20 +2,52 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Image, View, Text, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-const BeeIcon = () => (
+const HedgehogIcon = () => (
   <Image
     source={require('@/assets/images/react-logo.png')}
-    style={styles.beeIcon}
+    style={styles.hedgehogIcon}
   />
 );
 
 const SurveyScreen = () => {
+  // Track all answers in a single state object
+  const [answers, setAnswers] = useState({
+    name: '',
+    relationshipType: '',
+    breakupDate: '',
+    healingGoal: '',
+    wantsTips: false
+  });
+
   const [step, setStep] = useState(1);
-  const [name, setName] = useState('');
-  const [selectedSubstance, setSelectedSubstance] = useState('');
-  const [quitDate, setQuitDate] = useState('about 1 month ago');
-  const [selectedStyle, setSelectedStyle] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleDateChange = (event: any, selectedDate: any) => {
+    setShowPicker(false);
+    if (event.type === 'set' && selectedDate) {
+      setAnswers({ ...answers, breakupDate: selectedDate.toISOString() });
+    }
+  };
+
+  // Helper to check if current step has an answer
+  const hasAnswerForCurrentStep = () => {
+    switch (step) {
+      case 1:
+        return answers.name.trim().length > 0;
+      case 2:
+        return answers.relationshipType !== '';
+      case 3:
+        return answers.breakupDate !== '';
+      case 4:
+        return answers.healingGoal !== '';
+      case 5:
+        return answers.wantsTips !== null;
+      default:
+        return false;
+    }
+  };
 
   const handleBack = () => {
     if (step === 1) {
@@ -26,30 +58,56 @@ const SurveyScreen = () => {
   };
 
   const handleNext = () => {
-    if (step < 5) {
+    if (step < 5 && hasAnswerForCurrentStep()) {
       setStep(step + 1);
     }
   };
 
   const handleSkip = () => {
-    handleNext();
+    // Reset the current step's answer to indicate it was skipped
+    const updatedAnswers = { ...answers };
+    switch (step) {
+      case 1:
+        updatedAnswers.name = '';
+        break;
+      case 2:
+        updatedAnswers.relationshipType = '';
+        break;
+      case 3:
+        updatedAnswers.breakupDate = '';
+        break;
+      case 4:
+        updatedAnswers.healingGoal = '';
+        break;
+      case 5:
+        updatedAnswers.wantsTips = false;
+        break;
+    }
+    setAnswers(updatedAnswers);
+    if (step < 5) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleChoiceAndNavigate = (choice) => {
+    setAnswers({ ...answers, wantsTips: choice });
+    // Navigate to tabs/home
+    router.replace('/tabs/home');
   };
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <BeeIcon />
+      <HedgehogIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Hi friend my name is Sam! I'm going to be your AI Sponsor.
-          It's really nice to meet you! What should I call you?
+          Hi! I'm Spiky, your healing companion. What's your name?
         </Text>
       </View>
-      <Text style={styles.inputLabel}>Your name (or nickname)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your name"
-        value={name}
-        onChangeText={setName}
+        placeholder="Your name"
+        value={answers.name}
+        onChangeText={(text) => setAnswers({ ...answers, name: text })}
         placeholderTextColor="#A0A0A0"
       />
     </View>
@@ -57,64 +115,92 @@ const SurveyScreen = () => {
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <BeeIcon />
+      <HedgehogIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          What are you trying to stop using? This will help me be a better sponsor.
+          What type of relationship ended?
         </Text>
       </View>
-      {['Alcohol', 'Nicotine', 'Cannabis', 'Cocaine', 'Oxycontin'].map((substance) => (
+      {[
+        'Long-term (1+ years)',
+        'Short-term',
+        'Marriage',
+        'Situationship',
+        `It's complicated`
+      ].map((type) => (
         <TouchableOpacity
-          key={substance}
+          key={type}
           style={[
-            styles.substanceButton,
-            selectedSubstance === substance && styles.selectedButton
+            styles.relationshipButton,
+            answers.relationshipType === type && styles.selectedButton
           ]}
-          onPress={() => setSelectedSubstance(substance)}
+          onPress={() => setAnswers({ ...answers, relationshipType: type })}
         >
-          <Text style={styles.substanceText}>{substance}</Text>
+          <Text style={styles.relationshipText}>{type}</Text>
         </TouchableOpacity>
       ))}
-      <TouchableOpacity style={styles.somethingElseButton}>
-        <Text style={styles.somethingElseText}>+ Something Else</Text>
-      </TouchableOpacity>
     </View>
   );
 
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
-      <BeeIcon />
+      <HedgehogIcon />
       <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>When did you quit using?</Text>
+        <Text style={styles.messageText}>When did it end?</Text>
       </View>
-      <TouchableOpacity style={styles.dateButton}>
-        <Text style={styles.dateButtonText}>Select Date</Text>
+      <TouchableOpacity 
+        style={styles.dateButton}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text style={styles.dateButtonText}>Pick date</Text>
       </TouchableOpacity>
-      <Text style={styles.dateText}>{quitDate}</Text>
+      <Text style={styles.dateText}>
+        {answers.breakupDate ? new Date(answers.breakupDate).toLocaleDateString() : ''}
+      </Text>
+      {showPicker && (
+        <DateTimePicker
+          value={answers.breakupDate ? new Date(answers.breakupDate) : new Date()}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </View>
   );
 
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
-      <BeeIcon />
+      <HedgehogIcon />
       <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>Which style field do you prefer?</Text>
+        <Text style={styles.messageText}>What's your main goal?</Text>
       </View>
-      <Text style={styles.subtitleText}>
-        Each day sober, you'll grow a sunflower in your field
-      </Text>
-      <View style={styles.styleOptionsContainer}>
-        {/* Add your style field images here */}
+      <View style={styles.goalOptionsContainer}>
+        {[
+          'Move on',
+          'Understand why',
+          'Build self-love',
+          'Stay no-contact',
+          'All of these'
+        ].map((goal) => (
+          <TouchableOpacity
+            key={goal}
+            style={[styles.goalButton, answers.healingGoal === goal && styles.selectedButton]}
+            onPress={() => setAnswers({ ...answers, healingGoal: goal })}
+          >
+            <Text style={styles.goalText}>{goal}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
 
   const renderStep5 = () => (
     <View style={styles.stepContainer}>
-      <BeeIcon />
+      <HedgehogIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Would you like me to send you messages along the way?
+          Want daily healing tips from me?
         </Text>
       </View>
       <Image
@@ -122,11 +208,17 @@ const SurveyScreen = () => {
         style={styles.notificationPreview}
       />
       <View style={styles.choiceContainer}>
-        <TouchableOpacity style={styles.choiceButton}>
-          <Text style={styles.choiceButtonText}>No, thanks</Text>
+        <TouchableOpacity 
+          style={[styles.choiceButton]}
+          onPress={() => handleChoiceAndNavigate(false)}
+        >
+          <Text style={styles.choiceButtonText}>Not now</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.choiceButton, styles.primaryButton]}>
-          <Text style={styles.primaryButtonText}>Go for it</Text>
+        <TouchableOpacity 
+          style={[styles.choiceButton, styles.primaryButton]}
+          onPress={() => handleChoiceAndNavigate(true)}
+        >
+          <Text style={styles.primaryButtonText}>Yes!</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -149,6 +241,33 @@ const SurveyScreen = () => {
     }
   };
 
+  const renderFooter = () => {
+    if (step === 5) return null;
+    
+    return (
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={styles.skipButton}
+          onPress={handleSkip}
+        >
+          <Text style={styles.skipButtonText}>Skip</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[
+            styles.nextButton,
+            !hasAnswerForCurrentStep() && styles.nextButtonDisabled
+          ]}
+          onPress={hasAnswerForCurrentStep() ? handleNext : null}
+        >
+          <Text style={[
+            styles.nextButtonText,
+            !hasAnswerForCurrentStep() && styles.nextButtonTextDisabled
+          ]}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -164,20 +283,7 @@ const SurveyScreen = () => {
           </View>
         </View>
         {renderCurrentStep()}
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={styles.skipButton}
-            onPress={handleSkip}
-          >
-            <Text style={styles.skipButtonText}>Skip for now</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.nextButton}
-            onPress={handleNext}
-          >
-            <Text style={styles.nextButtonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
+        {renderFooter()}
       </View>
     </SafeAreaView>
   );
@@ -218,7 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
-  beeIcon: {
+  hedgehogIcon: {
     width: 48,
     height: 48,
     marginBottom: 16,
@@ -234,11 +340,6 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     lineHeight: 32,
   },
-  inputLabel: {
-    fontSize: 16,
-    color: '#1F2937',
-    marginBottom: 8,
-  },
   input: {
     height: 56,
     borderWidth: 1,
@@ -249,7 +350,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     backgroundColor: '#FFFFFF',
   },
-  substanceButton: {
+  relationshipButton: {
     padding: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -261,7 +362,7 @@ const styles = StyleSheet.create({
     borderColor: '#4F46E5',
     backgroundColor: '#EEF2FF',
   },
-  substanceText: {
+  relationshipText: {
     fontSize: 16,
     color: '#1F2937',
   },
@@ -294,16 +395,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
   },
-  subtitleText: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
+  goalOptionsContainer: {
+    gap: 12,
   },
-  styleOptionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
+  goalButton: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  goalText: {
+    fontSize: 16,
+    color: '#1F2937',
   },
   notificationPreview: {
     width: '100%',
@@ -350,10 +454,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 100,
   },
+  nextButtonDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
   nextButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  nextButtonTextDisabled: {
+    color: '#9CA3AF',
   },
   primaryButton: {
     backgroundColor: '#4F46E5',

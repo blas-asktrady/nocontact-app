@@ -3,7 +3,7 @@ import supabase from '@/libs/supabase'
 
 type User = Tables<'users'>
 
-export async function updateLoginTime(userId: string) {
+  export async function updateLoginTime(userId: string) {
     try {
       await supabase.from('users').update({ last_login: new Date() }).eq('id', userId)
     } catch (error) {
