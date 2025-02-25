@@ -10,6 +10,7 @@ import { JournalProvider } from '@/hooks/useJournal';
 import { ChatsProvider } from '@/hooks/useChats';
 import { UserProvider } from '@/hooks/useUser';
 import { MessagesProvider } from '@/hooks/useMessages';
+import { PandaProvider } from '@/hooks/usePanda';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -34,6 +35,7 @@ export default function RootLayout() {
       <ChatsProvider>
         <MessagesProvider>
           <JournalProvider>
+            <PandaProvider>
             <ThemeProvider value={DefaultTheme}>
               <Stack screenOptions={{
                 headerShown: false,
@@ -81,6 +83,7 @@ export default function RootLayout() {
               </Stack>
               <StatusBar style="dark" />
             </ThemeProvider>
+            </PandaProvider>
           </JournalProvider>
         </MessagesProvider>
       </ChatsProvider>
