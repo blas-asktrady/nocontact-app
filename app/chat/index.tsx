@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Image, FlatList, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -32,14 +32,56 @@ const ChatScreen = ({ characterId = '1' }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isReceivingMessage, setIsReceivingMessage] = useState(false);
-  const flatListRef = React.useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList>(null);
+  
+  // Keep reference to active WebSocket cleanup functions
+  const activeWebSocketCleanup = useRef<(() => void) | null>(null);
+  
+  // Track all message IDs to prevent duplicates
+  const messageIdsRef = useRef<Set<string>>(new Set());
 
-  // Load saved messages on component mount
+  // Initialize message state from local storage/context
   useEffect(() => {
-    if (savedMessages && savedMessages.length > 0) {
-      setMessages(savedMessages);
+    // Initially load saved messages only if our local state is empty
+    if (savedMessages && savedMessages.length > 0 && messages.length === 0) {
+      const uniqueMessages = savedMessages.filter(msg => {
+        if (!messageIdsRef.current.has(msg.id || '')) {
+          messageIdsRef.current.add(msg.id || '');
+          return true;
+        }
+        return false;
+      });
+      
+      setMessages(uniqueMessages);
     }
-  }, [savedMessages]);
+    
+    // Cleanup function for component unmount
+    return () => {
+      if (activeWebSocketCleanup.current) {
+        activeWebSocketCleanup.current();
+      }
+    };
+  }, []);
+  
+  // Add a new message to the local state and update the message ID set
+  const addMessageToState = (message: Message) => {
+    // Only add the message if it's not a duplicate
+    if (!messageIdsRef.current.has(message.id || '')) {
+      messageIdsRef.current.add(message.id || '');
+      setMessages(prevMessages => [...prevMessages, message]);
+      return true;
+    }
+    return false;
+  };
+  
+  // Update a message in the local state by ID
+  const updateMessageInState = (messageId: string, updatedContent: string) => {
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId ? { ...msg, content: updatedContent } : msg
+      )
+    );
+  };
 
   const scrollToBottom = () => {
     if (flatListRef.current) {
@@ -77,13 +119,26 @@ const ChatScreen = ({ characterId = '1' }) => {
   const handleVoiceChat = () => {
     navigation.navigate('chat/voice');
   };
+  
+  // Helper function to filter out timeout messages or other system messages
+  const filterSystemMessages = (content: string): string => {
+    // Check for timeout message JSON
+    if (content.endsWith('{"type": "timeout"}')) {
+      return content.replace('{"type": "timeout"}', '').trim();
+    }
+    
+    // Add more filters for other system messages if needed
+    
+    return content;
+  };
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || isSendingMessage) return;
 
-    // Create user message
+    // Create user message with guaranteed unique ID
+    const userMessageId = `user-msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const userMessage: Message = {
-      id: Date.now().toString(), // Ensure we have an ID for the message
+      id: userMessageId,
       content: inputText,
       senderType: 'user',
       senderId: 'user123',
@@ -92,18 +147,28 @@ const ChatScreen = ({ characterId = '1' }) => {
     };
 
     // Add user message to display
-    setMessages(prev => [...prev, userMessage]);
+    addMessageToState(userMessage);
     
     // Save to message history
     await addNewMessage(userMessage, 'user123', 'Chat with Sam', characterId);
     
-    // Clear input
+    // Store the message text and clear input immediately
+    const messageToBeSent = inputText;
     setInputText('');
+    
+    // Allow the user to keep typing for the next message
+    // while the current one is being sent
     scrollToBottom();
     
     try {
-      // Create a placeholder for the AI response
-      const aiPlaceholderId = `ai-response-${Date.now()}`;
+      // Ensure any previous WebSocket connection is closed
+      if (activeWebSocketCleanup.current) {
+        activeWebSocketCleanup.current();
+        activeWebSocketCleanup.current = null;
+      }
+      
+      // Create a placeholder for the AI response with guaranteed unique ID
+      const aiPlaceholderId = `ai-response-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const aiPlaceholder: Message = {
         id: aiPlaceholderId,
         content: '',
@@ -114,11 +179,11 @@ const ChatScreen = ({ characterId = '1' }) => {
       };
       
       // Add empty AI message to show waiting
-      setMessages(prev => [...prev, aiPlaceholder]);
+      addMessageToState(aiPlaceholder);
       setIsReceivingMessage(true);
       
       // Send message via WebSocket
-      const response = await sendMessage(inputText, characterId);
+      const response = await sendMessage(messageToBeSent, characterId);
       
       // Handle streaming response
       if (response instanceof ReadableStream) {
@@ -135,17 +200,19 @@ const ChatScreen = ({ characterId = '1' }) => {
           const chunk = decoder.decode(value, { stream: true });
           responseText += chunk;
           
+          // Clean the response text of any system messages
+          const filteredText = filterSystemMessages(responseText);
+          
           // Update the AI message with new content
-          setMessages(prev => 
-            prev.map(msg => msg.id === aiPlaceholderId ? { ...msg, content: responseText } : msg)
-          );
+          updateMessageInState(aiPlaceholderId, filteredText);
           scrollToBottom();
         }
         
-        // Save the complete AI response to history
+        // Save the complete AI response to history, with system messages filtered out
+        const finalResponseText = filterSystemMessages(responseText);
         const finalAiMessage: Message = {
           id: aiPlaceholderId,
-          content: responseText,
+          content: finalResponseText,
           senderType: 'ai',
           senderId: characterId,
           receiverId: 'user123',
@@ -160,31 +227,31 @@ const ChatScreen = ({ characterId = '1' }) => {
         
         // Use the callback to receive messages
         const cleanup = response((message: string) => {
+          // Check if this is a system message
+          if (message.includes('"type": "timeout"')) {
+            // Don't append this to the message
+            return;
+          }
+          
           responseText += message;
           
           // Update the AI message with new content
-          setMessages(prev => 
-            prev.map(msg => msg.id === aiPlaceholderId ? { ...msg, content: responseText } : msg)
-          );
+          updateMessageInState(aiPlaceholderId, responseText);
           scrollToBottom();
         });
         
-        // Return cleanup function for component unmount
-        return () => {
-          if (typeof cleanup === 'function') {
-            cleanup();
-          }
-        };
+        // Store the cleanup function
+        activeWebSocketCleanup.current = cleanup;
       } else if (typeof response === 'string') {
-        // Handle simple string response
-        setMessages(prev => 
-          prev.map(msg => msg.id === aiPlaceholderId ? { ...msg, content: response } : msg)
-        );
+        // Handle simple string response, filtering any system messages
+        const filteredResponse = filterSystemMessages(response);
+        
+        updateMessageInState(aiPlaceholderId, filteredResponse);
         
         // Save the AI response to history
         const finalAiMessage: Message = {
           id: aiPlaceholderId,
-          content: response,
+          content: filteredResponse,
           senderType: 'ai',
           senderId: characterId,
           receiverId: 'user123',
@@ -197,7 +264,7 @@ const ChatScreen = ({ characterId = '1' }) => {
       console.error('Error sending message:', error);
       // Add error message
       const errorMessage: Message = {
-        id: Date.now().toString(),
+        id: `error-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         content: 'Sorry, I encountered an error while processing your message. Please try again.',
         senderType: 'ai',
         senderId: characterId,
@@ -205,8 +272,9 @@ const ChatScreen = ({ characterId = '1' }) => {
         createdAt: new Date().toISOString(),
       };
       
-      setMessages(prev => [...prev, errorMessage]);
+      addMessageToState(errorMessage);
     } finally {
+      // Always reset the receiving state, regardless of outcome
       setIsReceivingMessage(false);
       scrollToBottom();
     }
@@ -214,7 +282,10 @@ const ChatScreen = ({ characterId = '1' }) => {
 
   const handleQuickAction = (actionText: string) => {
     setInputText(actionText);
-    handleSendMessage();
+    // Use setTimeout to give time for the state to update
+    setTimeout(() => {
+      handleSendMessage();
+    }, 0);
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -236,7 +307,10 @@ const ChatScreen = ({ characterId = '1' }) => {
           styles.messageBubble,
           isUserMessage && styles.userMessageBubble
         ]}>
-          <Text style={styles.messageText}>
+          <Text style={[
+            styles.messageText,
+            isUserMessage && styles.userMessageText
+          ]}>
             {item.content}
           </Text>
         </View>
@@ -254,7 +328,7 @@ const ChatScreen = ({ characterId = '1' }) => {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id || item.createdAt}
+          keyExtractor={(item) => item.id || `${item.createdAt}-${Math.random()}`}
           contentContainerStyle={styles.chatContentContainer}
           onContentSizeChange={scrollToBottom}
           onLayout={scrollToBottom}
@@ -302,15 +376,16 @@ const ChatScreen = ({ characterId = '1' }) => {
             onChangeText={setInputText}
             returnKeyType="send"
             onSubmitEditing={handleSendMessage}
-            editable={!isSendingMessage && !isReceivingMessage}
+            // Only disable input when sending the message, not when receiving
+            editable={!isSendingMessage}
           />
           <TouchableOpacity 
             style={[
               styles.sendButton,
-              (!inputText.trim() || isSendingMessage || isReceivingMessage) && styles.disabledButton
+              (!inputText.trim() || isSendingMessage) && styles.disabledButton
             ]}
             onPress={handleSendMessage}
-            disabled={!inputText.trim() || isSendingMessage || isReceivingMessage}
+            disabled={!inputText.trim() || isSendingMessage}
           >
             {isSendingMessage ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -318,7 +393,7 @@ const ChatScreen = ({ characterId = '1' }) => {
               <Feather 
                 name="send" 
                 size={24} 
-                color={inputText.trim() && !isReceivingMessage ? "#FFFFFF" : "#A3A3A3"} 
+                color={inputText.trim() ? "#FFFFFF" : "#A3A3A3"} 
               />
             )}
           </TouchableOpacity>
