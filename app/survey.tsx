@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Image, View, Text, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { 
+  updateUsername, 
+  updateDepressionDuration, 
+  updateLastEpisodeDate,
+  updatePrimaryGoal,
+  updateWantTips,
+  updateIsSurveyCompleted
+} from '@/services/surveyService'; // Import the survey service functions
+import { useUser } from '@/hooks/useUser'; // Add this import
 
 const SupportIcon = () => (
   <Image
@@ -23,11 +32,17 @@ const SurveyScreen = () => {
 
   const [step, setStep] = useState(1);
   const [showPicker, setShowPicker] = useState(false);
+  const { user } = useUser(); // Use the useUser hook to get the current user
 
   const handleDateChange = (event: any, selectedDate: any) => {
     setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
-      setAnswers({ ...answers, lastEpisodeDate: selectedDate.toISOString() });
+      const newDate = selectedDate.toISOString();
+      setAnswers({ ...answers, lastEpisodeDate: newDate });
+      // Update the lastEpisodeDate in the database
+      if (user?.id) {
+        updateLastEpisodeDate(user.id, newDate);
+      }
     }
   };
 
@@ -59,7 +74,29 @@ const SurveyScreen = () => {
 
   const handleNext = () => {
     if (step < 5 && hasAnswerForCurrentStep()) {
+      // Save the current step's answer to the database
+      saveCurrentStepAnswer();
       setStep(step + 1);
+    }
+  };
+
+  // Save current step's answer to the database
+  const saveCurrentStepAnswer = () => {
+    if (!user?.id) return; // Add a guard clause
+    
+    switch (step) {
+      case 1:
+        updateUsername(user.id, answers.name);
+        break;
+      case 2:
+        updateDepressionDuration(user.id, answers.depressionDuration);
+        break;
+      case 3:
+        // Already handled in handleDateChange
+        break;
+      case 4:
+        updatePrimaryGoal(user.id, answers.primaryGoal);
+        break;
     }
   };
 
@@ -91,6 +128,15 @@ const SurveyScreen = () => {
 
   const handleChoiceAndNavigate = (choice: boolean) => {
     setAnswers({ ...answers, wantsTips: choice });
+    
+    if (user?.id) {
+      // Update want tips preference
+      updateWantTips(user.id, choice);
+      
+      // Mark the survey as completed regardless of choice
+      updateIsSurveyCompleted(user.id, true);
+    }
+    
     // Navigate to tabs/home
     router.replace('/tabs/home');
   };
@@ -134,7 +180,9 @@ const SurveyScreen = () => {
             styles.durationButton,
             answers.depressionDuration === duration && styles.selectedButton
           ]}
-          onPress={() => setAnswers({ ...answers, depressionDuration: duration })}
+          onPress={() => {
+            setAnswers({ ...answers, depressionDuration: duration });
+          }}
         >
           <Text style={styles.durationText}>{duration}</Text>
         </TouchableOpacity>

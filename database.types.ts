@@ -326,6 +326,36 @@ export type Database = {
           },
         ]
       }
+      surveys: {
+        Row: {
+          last_depression_episode: string | null
+          created_at: string
+          healing_goal: string | null
+          id: string
+          depression_duration: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_depression_episode?: string | null
+          created_at?: string
+          healing_goal?: string | null
+          id?: string
+          depression_duration?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_depression_episode?: string | null
+          created_at?: string
+          healing_goal?: string | null
+          id?: string
+          depression_duration?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_goals: {
         Row: {
           category: string | null
@@ -424,9 +454,55 @@ export type Database = {
           },
         ]
       }
-      users: {
+      user_settings: {
         Row: {
           allowed_monthly_messages: number
+          id: string
+          messages_used_this_month: number
+          notification_preferences: Json | null
+          profile_picture_url: string | null
+          streak_count: number
+          streak_date: string | null
+          timezone: string | null
+          user_id: string
+          wants_tips: boolean | null
+        }
+        Insert: {
+          allowed_monthly_messages?: number
+          id: string
+          messages_used_this_month?: number
+          notification_preferences?: Json | null
+          profile_picture_url?: string | null
+          streak_count?: number
+          streak_date?: string | null
+          timezone?: string | null
+          user_id: string
+          wants_tips?: boolean | null
+        }
+        Update: {
+          allowed_monthly_messages?: number
+          id?: string
+          messages_used_this_month?: number
+          notification_preferences?: Json | null
+          profile_picture_url?: string | null
+          streak_count?: number
+          streak_date?: string | null
+          timezone?: string | null
+          user_id?: string
+          wants_tips?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
           auth_provider: string
           created_at: string
           email: string
@@ -435,23 +511,16 @@ export type Database = {
           is_active: boolean
           is_onboarding_completed: boolean
           last_login: string | null
-          messages_used_this_month: number
-          notification_preferences: Json | null
           payment_customer_id: string | null
           payment_method: string | null
           payment_provider: string | null
-          profile_picture_url: string | null
-          streak_count: number
-          streak_date: string | null
           subscription_end_date: string | null
           subscription_start_date: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
-          timezone: string | null
           updated_at: string
           username: string | null
         }
         Insert: {
-          allowed_monthly_messages?: number
           auth_provider: string
           created_at?: string
           email: string
@@ -460,23 +529,16 @@ export type Database = {
           is_active?: boolean
           is_onboarding_completed?: boolean
           last_login?: string | null
-          messages_used_this_month?: number
-          notification_preferences?: Json | null
           payment_customer_id?: string | null
           payment_method?: string | null
           payment_provider?: string | null
-          profile_picture_url?: string | null
-          streak_count?: number
-          streak_date?: string | null
           subscription_end_date?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
-          timezone?: string | null
           updated_at?: string
           username?: string | null
         }
         Update: {
-          allowed_monthly_messages?: number
           auth_provider?: string
           created_at?: string
           email?: string
@@ -485,18 +547,12 @@ export type Database = {
           is_active?: boolean
           is_onboarding_completed?: boolean
           last_login?: string | null
-          messages_used_this_month?: number
-          notification_preferences?: Json | null
           payment_customer_id?: string | null
           payment_method?: string | null
           payment_provider?: string | null
-          profile_picture_url?: string | null
-          streak_count?: number
-          streak_date?: string | null
           subscription_end_date?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
-          timezone?: string | null
           updated_at?: string
           username?: string | null
         }
