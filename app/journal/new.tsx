@@ -45,7 +45,7 @@ export default function NewJournalScreen() {
   useEffect(() => {
     if (params) {
       setEntryId(params.id);
-      setTimestamp(params.timestamp);
+      setTimestamp(params.timestamp ? Number(params.timestamp) : undefined);
       setDescription(params.description);
       setType(params.type);
       if (params.content) {
@@ -84,7 +84,7 @@ export default function NewJournalScreen() {
       // Update existing entry
       updateEntry({
         id: entryId,
-        timestamp: timestamp || Date.now(),
+        timestamp: timestamp ? Number(timestamp) : Date.now(),
         description: description || journalEntry.slice(0, 100), // First 100 chars as description
         type: type || 'entry',
         content: journalEntry

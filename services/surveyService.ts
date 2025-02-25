@@ -17,8 +17,6 @@ export async function updateUsername(userId: string, username: string) {
 export async function updateDepressionDuration(userId: string, depressionDuration: string) {
   console.log('updateDepressionDuration2', userId, depressionDuration)
   try {
-    // This field doesn't exist in your schema
-    // Update to relationship_type in surveys table
     const surveyData: Partial<Survey> = { depression_duration: depressionDuration }
     const { data, error } = await supabase.from('surveys').update(surveyData).eq('user_id', userId)
     console.log('updateDepressionDuration', data, error)
@@ -29,8 +27,6 @@ export async function updateDepressionDuration(userId: string, depressionDuratio
 
 export async function updateLastEpisodeDate(userId: string, lastEpisodeDate: string) {
   try {
-    // This field doesn't exist in your schema
-    // Update to breakup_date in surveys table
     const surveyData: Partial<Survey> = { last_depression_episode: lastEpisodeDate }
     await supabase.from('surveys').update(surveyData).eq('user_id', userId)
   } catch (error) {
@@ -40,8 +36,6 @@ export async function updateLastEpisodeDate(userId: string, lastEpisodeDate: str
 
 export async function updatePrimaryGoal(userId: string, primaryGoal: string) {
   try {
-    // This field doesn't exist in your schema
-    // Update to healing_goal in surveys table
     const surveyData: Partial<Survey> = { healing_goal: primaryGoal }
     await supabase.from('surveys').update(surveyData).eq('user_id', userId)
   } catch (error) {
@@ -51,7 +45,6 @@ export async function updatePrimaryGoal(userId: string, primaryGoal: string) {
 
 export async function updateWantTips(userId: string, wantTips: boolean) {
   try {
-    // This field is in user_settings, not users
     const settingsData: Partial<UserSettings> = { wants_tips: wantTips }
     await supabase.from('user_settings').update(settingsData).eq('user_id', userId)
   } catch (error) {
