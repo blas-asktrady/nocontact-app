@@ -1,12 +1,21 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity 
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 
+// Import the learnings data
+import learningsData from '@/assets/learnings/learnings.json';
+
 type RootStackParamList = {
   'learn/[id]': {
-    id: number;
-    article: typeof articles[0];
+    id: string;
+    stage: typeof learningsData.stages[0];
   };
 };
 
@@ -14,94 +23,68 @@ type NavigationProps = NavigationProp<RootStackParamList>;
 
 const LearnScreen = () => {
   const navigation = useNavigation<NavigationProps>();
+  const [stages, setStages] = useState<typeof learningsData.stages>([]);
+  const [blog, setBlog] = useState<typeof learningsData.blog | null>(null);
 
-  const articles = [
-    {
-      id: 1,
-      title: 'How to know if you have a problem',
-      duration: '9 min',
-      type: 'Article',
-      author: {
-        name: 'Emily Jacobson',
-        role: 'Education Lead @ Sunflower',
-        avatar: require('@/assets/images/react-logo.png')
-      },
-      content: 'The journey to understanding addiction begins with recognizing the signs...',
-      audioUrl: '/path/to/audio1.mp3'
-    },
-    {
-      id: 2,
-      title: 'Why Is Admitting the Problem Powerful?',
-      duration: '10 min',
-      type: 'Article',
-      author: {
-        name: 'Emily Jacobson',
-        role: 'Education Lead @ Sunflower',
-        avatar: require('@/assets/images/react-logo.png')
-      },
-      content: 'The journey to recovery often begins with a simple yet profound step: admitting theres a problem. It\'s a decision that, though challenging, can spark remarkable transformation...',
-      audioUrl: '/path/to/audio2.mp3'
-    },
-    {
-      id: 3,
-      title: 'How Do You Actually "Admit the Problem"?',
-      duration: '9 min',
-      type: 'Article',
-      author: {
-        name: 'Emily Jacobson',
-        role: 'Education Lead @ Sunflower',
-        avatar: require('@/assets/images/react-logo.png')
-      },
-      content: 'Taking the step to admit a problem requires both courage and strategy...',
-      audioUrl: '/path/to/audio3.mp3'
-    }
-  ];
+  useEffect(() => {
+    setStages(learningsData.stages);
+    setBlog(learningsData.blog);
+  }, []);
 
-  const ArticleCard = ({ article }: { article: typeof articles[0] }) => (
+  const StageCard = ({ stage }: { stage: typeof learningsData.stages[0] }) => (
     <TouchableOpacity 
-      style={styles.articleCard}
+      style={styles.stageCard}
       onPress={() => navigation.navigate('learn/[id]', { 
-        id: article.id,
-        article: article
+        id: stage.id,
+        stage: stage
       })}
     >
-      <View style={styles.iconContainer}>
-        <Feather name="file-text" size={24} color="#4B69FF" />
+      <View style={styles.stageNumberContainer}>
+        <Text style={styles.stageNumber}>{stage.number}</Text>
       </View>
-      <View style={styles.articleInfo}>
-        <Text style={styles.articleTitle}>{article.title}</Text>
-        <View style={styles.articleMeta}>
-          <Feather name="clock" size={16} color="#666" />
-          <Text style={styles.metaText}>{article.duration}</Text>
-          <Text style={styles.metaDivider}>|</Text>
-          <Text style={styles.metaText}>{article.type}</Text>
+      
+      <View style={styles.stageContentContainer}>
+        <Text style={styles.stageTitle}>{stage.title}</Text>
+        <Text style={styles.stageDescription} numberOfLines={2}>
+          {stage.short_description}
+        </Text>
+        
+        <View style={styles.stageMetaContainer}>
+          <View style={styles.stageMetaIconContainer}>
+            <Feather name="clock" size={14} color="#6B7280" />
+            <Text style={styles.stageMetaText}>
+              {stage.estimated_duration} | Stage {stage.number}
+            </Text>
+          </View>
         </View>
+      </View>
+      
+      <View style={styles.stageChevronContainer}>
+        <Feather name="chevron-right" size={24} color="#9CA3AF" />
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Understanding Addiction</Text>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={styles.progress} />
-          </View>
-          <Text style={styles.progressText}>Completed 0%</Text>
-        </View>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>
+          {blog?.title || "Understanding Grief"}
+        </Text>
+        <Text style={styles.headerSubtitle}>
+          {blog?.description || ""}
+        </Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          <Text style={styles.sectionNumber}>01. </Text>
-          Admitting you have a problem
-        </Text>
-
-        {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
+      <View style={styles.stagesContainer}>
+        <Text style={styles.sectionTitle}>Stages of Grief</Text>
+        {stages.map((stage) => (
+          <StageCard
+            key={stage.id}
+            stage={stage}
           />
         ))}
       </View>
@@ -112,83 +95,97 @@ const LearnScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F9FAFB',
   },
-  header: {
-    padding: 20,
-    backgroundColor: '#F8F9FA',
+  contentContainer: {
+    paddingBottom: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  progressContainer: {
-    marginTop: 8,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#E8EAF6',
-    borderRadius: 4,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 8,
   },
-  progress: {
-    width: '0%',
-    height: 8,
-    backgroundColor: '#4B69FF',
-    borderRadius: 4,
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    lineHeight: 24,
   },
-  progressText: {
-    fontSize: 18,
-    color: '#666',
-  },
-  section: {
-    padding: 20,
+  stagesContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
   },
-  sectionNumber: {
-    color: '#4B69FF',
-  },
-  articleCard: {
+  stageCard: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    padding: 16,
     borderRadius: 12,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
     alignItems: 'center',
+    padding: 16,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#EEF0FF',
-    borderRadius: 24,
+  stageNumberContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E5E7EB',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
-  articleInfo: {
+  stageNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  stageContentContainer: {
     flex: 1,
   },
-  articleTitle: {
+  stageTitle: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  stageDescription: {
+    fontSize: 14,
+    color: '#6B7280',
     marginBottom: 8,
   },
-  articleMeta: {
+  stageMetaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  metaText: {
-    color: '#666',
+  stageMetaIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stageMetaText: {
+    fontSize: 12,
+    color: '#6B7280',
     marginLeft: 4,
   },
-  metaDivider: {
-    color: '#666',
-    marginHorizontal: 8,
+  stageChevronContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
