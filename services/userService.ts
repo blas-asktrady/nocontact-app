@@ -2,6 +2,7 @@ import type { Tables } from '@/database.types'
 import supabase from '@/libs/supabase'
 
 type User = Tables<'users'>
+type UserSettings = Tables<'user_settings'>
 
   export async function updateLoginTime(userId: string) {
     try {
@@ -39,7 +40,27 @@ type User = Tables<'users'>
       console.error('Error fetching user:', error);
       return null;
     }
-  }  
+  }
+
+  export async function getUserSettingsByUserId(userId: string): Promise<UserSettings | null> {
+    try {
+      const { data: userSettings, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user settings:', error);
+        return null;
+      }
+      return userSettings;
+    }
+    catch (error) {
+      console.error('Error fetching user settings:', error);
+      return null;
+    }
+  }
   
   export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
     try {

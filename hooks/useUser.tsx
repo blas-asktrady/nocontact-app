@@ -3,6 +3,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import supabase from '@/libs/supabase';
 import * as WebBrowser from 'expo-web-browser';
+import { getUserById } from '@/services/userService';
 
 // Register WebBrowser for handling redirects
 WebBrowser.maybeCompleteAuthSession();
@@ -11,7 +12,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
-  daysCounter: number;
+  isOnboardingCompleted?: boolean;
 }
 
 interface UserContextType {
@@ -192,22 +193,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Get user profile data
-      const { data: userProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-        
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', profileError);
-      }
+      // Call getUserById from userService to get the latest user data
+      const dbUser = await getUserById(session.user.id);
       
       const userData: User = {
         id: session.user.id,
         email: session.user.email || '',
-        name: session.user.user_metadata?.name || '',
-        daysCounter: userProfile?.days_counter || 0,
+        name: session.user.user_metadata?.name || dbUser?.name || '',
+        isOnboardingCompleted: session.user.user_metadata?.is_onboarding_completed || dbUser?.is_onboarding_completed || false,
       };
       
       setUser(userData);

@@ -5,13 +5,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-// Import vector icons for Apple logo
 import { AntDesign as AppleIcon } from '@expo/vector-icons';
-// Import a custom component for the Google logo
 import GoogleLogo from '@/components/ui/GoogleLogo';
-// Import necessary authentication modules from Expo
-import * as WebBrowser from 'expo-web-browser';
-import Constants from 'expo-constants';
 
 const { height } = Dimensions.get('window');
 
@@ -27,12 +22,21 @@ export default function HomeScreen() {
       useNativeDriver: true,
     }).start();
     
-    // Check if user is logged in and navigate if needed
+    // Check if user is logged in and navigate based on onboarding status
     if (user) {
       console.log('User is logged in:', user);
-      // Don't auto-redirect if we're already on the dashboard
-      if (window.location.pathname !== '/survey') {
-        router.push('/survey');
+      
+      // Check if onboarding is completed
+      if (user.isOnboardingCompleted) {
+        // Redirect to home if onboarding is completed
+        if (window.location.pathname !== '/tabs/home') {
+          router.push('/tabs/home');
+        }
+      } else {
+        // Redirect to survey if onboarding is not completed
+        if (window.location.pathname !== '/survey') {
+          router.push('/survey');
+        }
       }
     } else {
       console.log('User is not logged in');
