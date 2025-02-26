@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image } from 'react-native';
 import { Link } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -16,12 +16,9 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
   
   return (
     <View style={styles.container}>
-      {/* Curved Background */}
-      <View style={styles.backgroundContainer}>
-        <View style={styles.background} />
-        <View style={styles.centerCurve} />
-      </View>
-
+      {/* Background */}
+      <View style={styles.background} />
+      
       {/* Tab Buttons */}
       <View style={styles.tabsContainer}>
         {visibleRoutes.map((route: any, index: number) => {
@@ -41,23 +38,57 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
             }
           };
 
+          // Define the tab colors based on the route name
+          const getTabColor = (routeName: string) => {
+            switch (routeName) {
+              case 'home': // Time
+                return '#FED797'; // Light orange/yellow
+              case 'journal':
+                return '#7DC6F4'; // Light blue
+              case 'learn':
+                return '#9CDDB2'; // Light green
+              case 'settings':
+                return '#D9D9DC'; // Light gray
+              default:
+                return '#D9D9DC';
+            }
+          };
+
+          // Set the tab label based on route name
+          const getTabLabel = (routeName: string) => {
+            switch (routeName) {
+              case 'home':
+                return 'Time';
+              case 'journal':
+                return 'Journal';
+              case 'learn':
+                return 'Learn';
+              case 'settings':
+                return 'Settings';
+              default:
+                return routeName;
+            }
+          };
+
           return (
             <TouchableOpacity
               key={route.key}
               onPress={onPress}
-              style={styles.tab}
+              style={[
+                styles.tab,
+                { backgroundColor: getTabColor(route.name) }
+              ]}
             >
-              <MaterialCommunityIcons
-                name={getIconName(route.name)}
-                size={24}
-                color={isFocused ? '#4B7BF5' : '#8E8E93'}
-              />
-              <Text style={[
-                styles.label,
-                { color: isFocused ? '#4B7BF5' : '#8E8E93' }
-              ]}>
-                {label}
-              </Text>
+              <View style={styles.tabContent}>
+                <MaterialCommunityIcons
+                  name={getIconName(route.name)}
+                  size={20}
+                  color="#4A5568"
+                />
+                <Text style={styles.label}>
+                  {getTabLabel(route.name)}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -67,7 +98,10 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
       <Link href="/chat" asChild>
         <TouchableOpacity style={styles.chatButton}>
           <View style={styles.chatButtonInner}>
-            <MaterialCommunityIcons name="panda" size={32} color="#FFFFFF" />
+            <Image 
+              source={require('@/assets/images/face.png')} 
+              style={styles.chatButtonImage} 
+            />
           </View>
         </TouchableOpacity>
       </Link>
@@ -78,106 +112,90 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 85,
+    height: 60,
     position: 'relative',
-  },
-  backgroundContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 85,
-    width: '100%',
   },
   background: {
     position: 'absolute',
-    bottom: 0,
+    top: 0,
     left: 0,
     right: 0,
-    height: '100%',
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  centerCurve: {
-    position: 'absolute',
-    width: 90,
-    height: 45,
-    backgroundColor: '#ffffff',
-    top: -20,
-    left: '50%',
-    marginLeft: -45,
-    borderTopLeftRadius: 45,
-    borderTopRightRadius: 45,
-    zIndex: 1,
+    bottom: 0,
+    backgroundColor: '#4FD1C5', // Lighter teal background color
   },
   tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
     height: '100%',
     width: '100%',
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
   },
   tab: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 10,
+    marginHorizontal: 5,
+    height: 42,
+    maxWidth: 70,
+  },
+  tabContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
     height: '100%',
-    paddingTop: 10,
-    flex: 1,
   },
   label: {
     fontFamily: 'SpaceMono',
-    fontSize: 12,
-    marginTop: 5,
+    fontSize: 10,
+    marginTop: 2,
+    color: '#4A5568',
   },
   chatButton: {
     position: 'absolute',
-    width: 70,
-    height: 70,
-    bottom: 40,
+    width: 50,
+    height: 50,
+    bottom: 30,
     left: '50%',
-    marginLeft: -35,
+    marginLeft: -25,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
   chatButtonInner: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#4B7BF5',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4665F9',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#4B7BF5',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  chatButtonImage: {
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
   },
 });
 
 function getIconName(routeName: string): string {
   switch (routeName) {
     case 'home':
-      return 'clock-outline';
+      return 'clock-outline'; // Time icon
     case 'journal':
-      return 'pencil';
+      return 'notebook-outline'; // Journal icon
     case 'learn':
-      return 'book-outline';
+      return 'school'; // Learn/Education icon
     case 'settings':
-      return 'cog-outline';
+      return 'cog-outline'; // Settings icon
     default:
       return 'cog-outline';
   }
