@@ -18,8 +18,11 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
   const leftTabs = visibleRoutes.slice(0, 2); // First two tabs
   const rightTabs = visibleRoutes.slice(2);   // Last two tabs
   
+  // Check if home is the selected tab
+  const isHomeSelected = state.routes[state.index]?.name === 'home';
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isHomeSelected && styles.homeContainer]}>
       {/* Background with Gradient */}
       <LinearGradient
         colors={['#3a47b3', '#4a57c3', '#5a67d3']}
@@ -177,6 +180,9 @@ const styles = StyleSheet.create({
     height: 70,
     position: 'relative',
     backgroundColor: '#6a77e3',
+  },
+  homeContainer: {
+    backgroundColor: '#57a836',
   },
   background: {
     position: 'absolute',

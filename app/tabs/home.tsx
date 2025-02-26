@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const HomeScreen = () => {
@@ -21,9 +21,10 @@ const HomeScreen = () => {
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#E9D5FF', '#EDE9FF', '#FFF7ED']}
+    <ImageBackground 
+      source={require('@/assets/home/garden.png')}
       style={styles.container}
+      resizeMode="cover"
     >
       <View style={styles.content}>
         <Text style={styles.label}>NoContact 🐼</Text>
@@ -55,18 +56,33 @@ const HomeScreen = () => {
             <Text style={styles.timeLabel}>SEC</Text>
           </View>
         </View>
+        
+        <View style={styles.characterContainer}>
+          <Image 
+            source={require('@/assets/home/zen_rock.png')} 
+            style={styles.rock}
+            resizeMode="contain"
+          />
+          <Image 
+            source={require('@/assets/home/panda.png')} 
+            style={styles.character}
+            resizeMode="contain"
+          />
+        </View>
       </View>
-    </LinearGradient>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,
-    paddingTop: 100,
+    paddingTop: 60,
     paddingHorizontal: 20,
   },
   label: {
@@ -101,6 +117,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 5,
+  },
+  characterContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 60,
+    position: 'relative',
+    height: 280,
+  },
+  rock: {
+    width: 280,
+    height: 120,
+    position: 'absolute',
+    bottom: 0,
+    zIndex: 1,
+  },
+  character: {
+    width: 180,
+    height: 180,
+    zIndex: 2,
+    position: 'absolute',
+    bottom: 60,
   },
 });
 
