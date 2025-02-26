@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image } from 'react-native';
 import { Link } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -15,6 +14,10 @@ interface CustomTabBarProps {
 export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
   const visibleRoutes = state.routes.filter((route: any) => route.name !== 'chat');
   
+  // Calculate positions to create more space around the center
+  const leftTabs = visibleRoutes.slice(0, 2); // First two tabs
+  const rightTabs = visibleRoutes.slice(2);   // Last two tabs
+  
   return (
     <View style={styles.container}>
       {/* Background with Gradient */}
@@ -25,79 +28,131 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
         end={{ x: 0, y: 1 }}
       />
       
-      {/* Tab Buttons */}
+      {/* Tab Buttons - Split into left and right groups */}
       <View style={styles.tabsContainer}>
-        {visibleRoutes.map((route: any, index: number) => {
-          const { options } = descriptors[route.key];
-          const label = options.tabBarLabel ?? options.title ?? route.name;
-          const isFocused = state.index === index;
+        {/* Left side tabs */}
+        <View style={styles.tabGroup}>
+          {leftTabs.map((route: any, index: number) => {
+            const { options } = descriptors[route.key];
+            const label = options.tabBarLabel ?? options.title ?? route.name;
+            const isFocused = state.index === index;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-          // Define the tab colors based on the route name
-          const getTabColor = (routeName: string) => {
-            switch (routeName) {
-              case 'home': // Time
-                return '#FED797'; // Light orange/yellow
-              case 'journal':
-                return '#7DC6F4'; // Light blue
-              case 'learn':
-                return '#9CDDB2'; // Light green
-              case 'settings':
-                return '#D9D9DC'; // Light gray
-              default:
-                return '#D9D9DC';
-            }
-          };
+            // Set the tab label based on route name
+            const getTabLabel = (routeName: string) => {
+              switch (routeName) {
+                case 'home':
+                  return 'Home';
+                case 'journal':
+                  return 'Journal';
+                case 'learn':
+                  return 'Learn';
+                case 'settings':
+                  return 'Settings';
+                default:
+                  return routeName;
+              }
+            };
 
-          // Set the tab label based on route name
-          const getTabLabel = (routeName: string) => {
-            switch (routeName) {
-              case 'home':
-                return 'Time';
-              case 'journal':
-                return 'Journal';
-              case 'learn':
-                return 'Learn';
-              case 'settings':
-                return 'Settings';
-              default:
-                return routeName;
-            }
-          };
+            return (
+              <TouchableOpacity
+                key={route.key}
+                onPress={onPress}
+                style={[
+                  styles.tab,
+                ]}
+              >
+                <View style={styles.tabContent}>
+                  <Image 
+                    source={getIconSource(route.name)}
+                    style={styles.tabIcon}
+                  />
+                  <Text style={[
+                    styles.label,
+                    route.name === 'home' ? styles.homeLabel : null
+                  ]}>
+                    {getTabLabel(route.name)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        
+        {/* Center space for chat button */}
+        <View style={styles.centerSpace} />
+        
+        {/* Right side tabs */}
+        <View style={styles.tabGroup}>
+          {rightTabs.map((route: any, index: number) => {
+            const actualIndex = index + leftTabs.length;
+            const { options } = descriptors[route.key];
+            const label = options.tabBarLabel ?? options.title ?? route.name;
+            const isFocused = state.index === actualIndex;
 
-          return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              style={[
-                styles.tab,
-                { backgroundColor: getTabColor(route.name) }
-              ]}
-            >
-              <View style={styles.tabContent}>
-                <MaterialCommunityIcons
-                  name={getIconName(route.name)}
-                  size={20}
-                  color="#4A5568"
-                />
-                <Text style={styles.label}>
-                  {getTabLabel(route.name)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
+
+            // Set the tab label based on route name
+            const getTabLabel = (routeName: string) => {
+              switch (routeName) {
+                case 'home':
+                  return 'Home';
+                case 'journal':
+                  return 'Journal';
+                case 'learn':
+                  return 'Learn';
+                case 'settings':
+                  return 'Settings';
+                default:
+                  return routeName;
+              }
+            };
+
+            return (
+              <TouchableOpacity
+                key={route.key}
+                onPress={onPress}
+                style={[
+                  styles.tab,
+                ]}
+              >
+                <View style={styles.tabContent}>
+                  <Image 
+                    source={getIconSource(route.name)}
+                    style={styles.tabIcon}
+                  />
+                  <Text style={[
+                    styles.label,
+                    route.name === 'home' ? styles.homeLabel : null
+                  ]}>
+                    {getTabLabel(route.name)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       {/* Centered Chat Button */}
@@ -105,10 +160,11 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
         <TouchableOpacity style={styles.chatButton}>
           <View style={styles.chatButtonInner}>
             <Image 
-              source={require('@/assets/images/face.png')} 
+              source={require('@/assets/navbar/icons-face.png')} 
               style={styles.chatButtonImage} 
             />
           </View>
+          <Text style={styles.chatLabel}>Chat</Text>
         </TouchableOpacity>
       </Link>
     </View>
@@ -133,12 +189,20 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     height: '100%',
     width: '100%',
     paddingHorizontal: 12,
     paddingBottom: 5,
+  },
+  tabGroup: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-around',
+  },
+  centerSpace: {
+    width: 65, // Reduced from 80 to 65 to create less separation
   },
   tab: {
     flex: 1,
@@ -156,16 +220,26 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   label: {
-    fontFamily: 'SpaceMono',
-    fontSize: 10,
-    marginTop: 2,
-    color: '#4A5568',
+    fontFamily: 'System',
+    fontSize: 13,
+    marginTop: 4,
+    color: 'white',
+    fontWeight: '500',
+  },
+  homeLabel: {
+    color: 'white', 
+    fontWeight: '600',
+    fontSize: 13,
+    fontFamily: 'System',
+  },
+  homeIcon: {
+    // You can remove this style completely
   },
   chatButton: {
     position: 'absolute',
     width: 50,
-    height: 50,
-    bottom: 35,
+    height: 70, 
+    bottom: 15, // Increased from 10 to 15 to move it higher
     left: '50%',
     marginLeft: -25,
     alignItems: 'center',
@@ -176,7 +250,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#4665F9', // This blue color works well with the new theme
+    backgroundColor: '#4665F9',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -189,23 +263,35 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   chatButtonImage: {
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
+    resizeMode: 'contain',
+  },
+  chatLabel: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 4,
+    fontFamily: 'System',
+  },
+  tabIcon: {
+    width: 32,
+    height: 32,
     resizeMode: 'contain',
   },
 });
 
-function getIconName(routeName: string): string {
+function getIconSource(routeName: string): any {
   switch (routeName) {
     case 'home':
-      return 'clock-outline'; // Time icon
+      return require('@/assets/navbar/icons8-house-96.png');
     case 'journal':
-      return 'notebook-outline'; // Journal icon
+      return require('@/assets/navbar/icons8-journal-96.png');
     case 'learn':
-      return 'school'; // Learn/Education icon
+      return require('@/assets/navbar/icons8-school-96.png');
     case 'settings':
-      return 'cog-outline'; // Settings icon
+      return require('@/assets/navbar/icons8-settings-96.png');
     default:
-      return 'cog-outline';
+      return require('@/assets/navbar/icons8-settings-96.png');
   }
 }
