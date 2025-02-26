@@ -218,6 +218,30 @@ const HomeScreen = () => {
       style={styles.container}
       resizeMode="cover"
     >
+      {/* Render flowers first so they appear behind the panda */}
+      {flowers.map((flower, index) => (
+        <Image 
+          key={`flower-${index}`}
+          source={require('@/assets/home/flower.png')} 
+          style={[
+            styles.flower,
+            {
+              position: 'absolute',
+              left: flower.x - (flower.size / 2),
+              top: flower.y - (flower.size / 2),
+              width: flower.size,
+              height: flower.size,
+              opacity: flower.opacity,
+              transform: [
+                { scaleX: flower.mirrored ? -1 : 1 }
+              ],
+              zIndex: Math.floor(flower.y), // Higher y-values (lower on screen) get higher z-index
+            }
+          ]}
+          resizeMode="contain"
+        />
+      ))}
+      
       <View style={styles.content}>
         <Text style={styles.label}>NoContact 🐼</Text>
         <Text style={styles.title}>You've stayed strong for</Text>
@@ -249,30 +273,6 @@ const HomeScreen = () => {
           </View>
         </View>
         
-        {/* Render flowers first so they appear behind the panda */}
-        {flowers.map((flower, index) => (
-          <Image 
-            key={`flower-${index}`}
-            source={require('@/assets/home/flower.png')} 
-            style={[
-              styles.flower,
-              {
-                position: 'absolute',
-                left: flower.x - (flower.size / 2),
-                top: flower.y - (flower.size / 2),
-                width: flower.size,
-                height: flower.size,
-                opacity: flower.opacity,
-                transform: [
-                  { scaleX: flower.mirrored ? -1 : 1 }
-                ],
-                zIndex: Math.floor(flower.y), // Higher y-values (lower on screen) get higher z-index
-              }
-            ]}
-            resizeMode="contain"
-          />
-        ))}
-        
         <View style={styles.characterContainer}>
           <Image 
             source={require('@/assets/home/zen_panda.png')} 
@@ -293,41 +293,84 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 60,
+    paddingTop: 40,
     paddingHorizontal: 20,
+    zIndex: 1000, // Dramatically increased to ensure it's above everything
+    elevation: 1000, // Added elevation for Android
+    position: 'absolute', // Make it absolute positioned
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#666',
     textAlign: 'center',
     marginBottom: 10,
+    color: 'white',
+    backgroundColor: '#6a77e3',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    zIndex: 1500, // Dramatically increased
+    elevation: 1500, // Added elevation for Android
   },
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
+    color: 'white',
+    backgroundColor: '#6a77e3',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 15,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    zIndex: 1500,
+    elevation: 1500,
   },
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
+    zIndex: 1500, // Dramatically increased
+    elevation: 1500, // Added elevation for Android
   },
   timeBlock: {
     alignItems: 'center',
+    zIndex: 1500, // Added zIndex
+    elevation: 1500, // Added elevation for Android
   },
   timeValue: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '900',
+    color: 'white',
+    textShadowColor: '#6a77e3',
+    textShadowOffset: { width: 2.5, height: 2.5 },
+    textShadowRadius: 4.5,
+    textShadowRadius: 2,
+    textShadowColor: '#6a77e3',
+    textShadowOffset: { width: -1.5, height: -1.5 },
+    textShadow: '2px 2px 0 #6a77e3, -2px -2px 0 #6a77e3, 2px -2px 0 #6a77e3, -2px 2px 0 #6a77e3, 0px 2px 0 #6a77e3, 2px 0px 0 #6a77e3, 0px -2px 0 #6a77e3, -2px 0px 0 #6a77e3',
+    zIndex: 1500,
+    elevation: 1500,
   },
   timeLabel: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: '700',
+    color: 'white',
     marginTop: 5,
+    textShadowColor: '#6a77e3',
+    textShadowOffset: { width: 1.5, height: 1.5 },
+    textShadowRadius: 3.5,
+    textShadow: '1px 1px 0 #6a77e3, -1px -1px 0 #6a77e3, 1px -1px 0 #6a77e3, -1px 1px 0 #6a77e3',
+    zIndex: 1500,
+    elevation: 1500,
   },
   characterContainer: {
     alignItems: 'center',
@@ -345,6 +388,7 @@ const styles = StyleSheet.create({
   },
   flower: {
     position: 'absolute',
+    zIndex: 10, // Ensure flowers have a lower zIndex
   },
 });
 
