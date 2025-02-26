@@ -4,7 +4,6 @@ import { Feather } from '@expo/vector-icons';
 
 const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
 
   const SettingsItem = ({ icon, title, hasToggle, hasArrow, onPress, value, onValueChange }) => (
     <TouchableOpacity 
@@ -37,30 +36,15 @@ const SettingsScreen = () => {
       {/* Share Card */}
       <View style={styles.shareCard}>
         <View style={styles.shareContent}>
-          <Text style={styles.shareTitle}>Share Sunflower with a friend</Text>
+          <Text style={styles.shareTitle}>Share Kufu Panda with a friend</Text>
           <Text style={styles.shareDescription}>
-            Know someone who could benefit from Sunflower? Tap to share the app.
+            Know someone who could benefit from Kufu Panda? Tap to share the app.
           </Text>
         </View>
         <TouchableOpacity style={styles.shareButton}>
           <Text style={styles.shareButtonText}>Share App</Text>
           <Feather name="arrow-up-right" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-      </View>
-
-      {/* Quit Dates Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>QUIT DATES</Text>
-        <SettingsItem
-          icon="clock"
-          title="Edit Alcohol Quit Date"
-          hasArrow
-        />
-        <SettingsItem
-          icon="plus"
-          title="Add Quit Date"
-          hasArrow
-        />
       </View>
 
       {/* Preferences Section */}
@@ -72,18 +56,6 @@ const SettingsScreen = () => {
           hasToggle
           value={notificationsEnabled}
           onValueChange={setNotificationsEnabled}
-        />
-        <SettingsItem
-          icon="moon"
-          title="Dark Mode"
-          hasToggle
-          value={darkModeEnabled}
-          onValueChange={setDarkModeEnabled}
-        />
-        <SettingsItem
-          icon="eye"
-          title="Customize Sober Tracker"
-          hasArrow
         />
         <SettingsItem
           icon="refresh-ccw"

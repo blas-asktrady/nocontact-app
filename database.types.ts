@@ -125,60 +125,6 @@ export type Database = {
           },
         ]
       }
-      content_library: {
-        Row: {
-          author_avatar_url: string | null
-          author_name: string | null
-          author_role: string | null
-          content: string | null
-          content_type: Database["public"]["Enums"]["content_type"]
-          created_at: string
-          description: string | null
-          duration: string | null
-          id: string
-          is_premium: boolean
-          media_url: string | null
-          recommended_for: string[] | null
-          tags: string[] | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_avatar_url?: string | null
-          author_name?: string | null
-          author_role?: string | null
-          content?: string | null
-          content_type: Database["public"]["Enums"]["content_type"]
-          created_at?: string
-          description?: string | null
-          duration?: string | null
-          id: string
-          is_premium?: boolean
-          media_url?: string | null
-          recommended_for?: string[] | null
-          tags?: string[] | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          author_avatar_url?: string | null
-          author_name?: string | null
-          author_role?: string | null
-          content?: string | null
-          content_type?: Database["public"]["Enums"]["content_type"]
-          created_at?: string
-          description?: string | null
-          duration?: string | null
-          id?: string
-          is_premium?: boolean
-          media_url?: string | null
-          recommended_for?: string[] | null
-          tags?: string[] | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       journals: {
         Row: {
           ai_insights: string | null
@@ -186,7 +132,7 @@ export type Database = {
           created_at: string
           id: string
           is_favorite: boolean
-          journal_type: Database["public"]["Enums"]["journal_type"]
+          journal_type: string
           mood_score: number | null
           tags: string[] | null
           title: string | null
@@ -197,9 +143,9 @@ export type Database = {
           ai_insights?: string | null
           content: string
           created_at?: string
-          id: string
+          id?: string
           is_favorite?: boolean
-          journal_type: Database["public"]["Enums"]["journal_type"]
+          journal_type: string
           mood_score?: number | null
           tags?: string[] | null
           title?: string | null
@@ -212,7 +158,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_favorite?: boolean
-          journal_type?: Database["public"]["Enums"]["journal_type"]
+          journal_type?: string
           mood_score?: number | null
           tags?: string[] | null
           title?: string | null
@@ -222,6 +168,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "journals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mascots: {
+        Row: {
+          created_at: string
+          emotion_streak: number | null
+          emotional_level: number | null
+          id: string
+          last_interaction_date: string | null
+          level: number | null
+          name: string | null
+          updated_at: string
+          user_id: string
+          xp: number | null
+        }
+        Insert: {
+          created_at?: string
+          emotion_streak?: number | null
+          emotional_level?: number | null
+          id: string
+          last_interaction_date?: string | null
+          level?: number | null
+          name?: string | null
+          updated_at?: string
+          user_id: string
+          xp?: number | null
+        }
+        Update: {
+          created_at?: string
+          emotion_streak?: number | null
+          emotional_level?: number | null
+          id?: string
+          last_interaction_date?: string | null
+          level?: number | null
+          name?: string | null
+          updated_at?: string
+          user_id?: string
+          xp?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mascots_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -328,29 +321,29 @@ export type Database = {
       }
       surveys: {
         Row: {
-          last_depression_episode: string | null
           created_at: string
+          depression_duration: string | null
           healing_goal: string | null
           id: string
-          depression_duration: string | null
+          last_depression_episode: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          last_depression_episode?: string | null
           created_at?: string
+          depression_duration?: string | null
           healing_goal?: string | null
           id?: string
-          depression_duration?: string | null
+          last_depression_episode?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          last_depression_episode?: string | null
           created_at?: string
+          depression_duration?: string | null
           healing_goal?: string | null
           id?: string
-          depression_duration?: string | null
+          last_depression_episode?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -406,47 +399,40 @@ export type Database = {
           },
         ]
       }
-      user_progress: {
+      user_learnings_progress: {
         Row: {
           completed: boolean
-          content_id: string
           favorite: boolean
           id: string
           last_accessed: string
+          learning_id: string
           notes: string | null
           progress_percentage: number
           user_id: string
         }
         Insert: {
           completed?: boolean
-          content_id: string
           favorite?: boolean
           id: string
           last_accessed?: string
+          learning_id: string
           notes?: string | null
           progress_percentage?: number
           user_id: string
         }
         Update: {
           completed?: boolean
-          content_id?: string
           favorite?: boolean
           id?: string
           last_accessed?: string
+          learning_id?: string
           notes?: string | null
           progress_percentage?: number
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_progress_content_id_fkey"
-            columns: ["content_id"]
-            isOneToOne: false
-            referencedRelation: "content_library"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_progress_user_id_fkey"
+            foreignKeyName: "user_learnings_progress_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

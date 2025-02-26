@@ -1,23 +1,63 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Platform, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import useMascot from '@/hooks/useMascot';
+import { useUser } from '@/hooks/useUser';
 
 const HomeScreen = () => {
-  // State for progress
-  const [progress, setProgress] = useState(0);
-  const maxProgress = 15;
+  // Get user and mascot data
+  const { user } = useUser();
+  const { mascot, loading, addXp } = useMascot(user?.id || '');
   
-  // Completed tasks
-  const completedTasks = [
+  // State for animations
+  const [animatingStars, setAnimatingStars] = useState<{id: number, animation: Animated.Value, top: number, left: number}[]>([]);
+  
+  // Available tasks
+  const [availableTasks, setAvailableTasks] = useState([
     { id: 1, title: 'Take 3 deep breaths', icon: '🍃', points: 5 },
     { id: 2, title: 'Take a stretch break', icon: '🦒', points: 5 },
     { id: 3, title: 'Brush teeth', icon: '🪥', points: 5 },
     { id: 4, title: 'Drink water', icon: '🥤', points: 5 },
     { id: 5, title: 'Wash my face', icon: '🧼', points: 5 },
-  ];
+  ]);
+  
+  // Completed tasks
+  const [completedTasks, setCompletedTasks] = useState<typeof availableTasks>([]);
   
   // Goals remaining message
-  const goalsLeft = 8;
+  const goalsLeft = availableTasks.length;
+
+  // Handle task completion
+  const handleTaskComplete = (task: typeof availableTasks[0], event: any) => {
+    // Create a new animated star
+    const newStar = {
+      id: Date.now(),
+      animation: new Animated.Value(0),
+      top: event.nativeEvent.pageY - 20,
+      left: event.nativeEvent.pageX - 20,
+    };
+    
+    setAnimatingStars(prev => [...prev, newStar]);
+    
+    // Remove task from available tasks
+    setAvailableTasks(prev => prev.filter(t => t.id !== task.id));
+    
+    // Add task to completed tasks
+    setCompletedTasks(prev => [...prev, task]);
+    
+    // Animate the star
+    Animated.timing(newStar.animation, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start(() => {
+      // Remove the star after animation completes
+      setAnimatingStars(prev => prev.filter(star => star.id !== newStar.id));
+      
+      // Add XP to mascot
+      addXp(task.points);
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,37 +91,37 @@ const HomeScreen = () => {
                 <View 
                   style={[
                     styles.progressFill, 
-                    { width: `${(progress / maxProgress) * 100}%` }
+                    { width: `${((mascot?.xp || 0) / 15) * 100}%` }
                   ]}
                 />
               </View>
-              <Text style={styles.progressText}>{progress} / {maxProgress}</Text>
+              <Text style={styles.progressText}>{mascot?.xp || 0} / 15</Text>
             </View>
           </LinearGradient>
           
           {/* Goals remaining */}
           <View style={styles.goalsContainer}>
             <View style={styles.goalsLeft}>
-
               <Text style={styles.goalsText}>{goalsLeft} goals left for today!</Text>
             </View>
             
-            <View style={styles.goalControls}>
-              <TouchableOpacity style={styles.goalControl}>
-                <Text>≡</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.goalControl}>
-                <Text>⊕</Text>
-              </TouchableOpacity>
-            </View>
           </View>
           
-          {/* Completed tasks */}
-          {completedTasks.map(task => (
-            <View key={task.id} style={styles.taskCard}>
+          {/* Available tasks */}
+          {availableTasks.map(task => (
+            <TouchableOpacity 
+              key={task.id} 
+              style={styles.taskCard}
+              onPress={(event) => handleTaskComplete(task, event)}
+            >
               <View style={styles.taskInfo}>
-                <TouchableOpacity style={styles.taskOptions}>
-                  <Text>⋮</Text>
+                <TouchableOpacity 
+                  style={styles.taskOptions}
+                  onPress={(e) => {
+                    e.stopPropagation(); // Prevent triggering the parent onPress
+                    // Handle options menu here
+                  }}
+                >
                 </TouchableOpacity>
                 <View style={styles.taskIconContainer}>
                   <Text style={styles.taskIcon}>{task.icon}</Text>
@@ -98,10 +138,68 @@ const HomeScreen = () => {
                   <Text style={styles.taskCheckmark}>✓</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
+          
+          {/* Completed tasks section (optional) */}
+          {completedTasks.length > 0 && (
+            <View style={styles.completedSection}>
+              <Text style={styles.completedHeader}>Completed Tasks</Text>
+              {completedTasks.map(task => (
+                <View key={task.id} style={[styles.taskCard, styles.completedTaskCard]}>
+                  <View style={styles.taskInfo}>
+                    <View style={styles.taskIconContainer}>
+                      <Text style={styles.taskIcon}>{task.icon}</Text>
+                    </View>
+                    <Text style={[styles.taskTitle, styles.completedTaskTitle]}>{task.title}</Text>
+                  </View>
+                  
+                  <View style={styles.taskActions}>
+                    <View style={styles.taskPoints}>
+                      <Text style={styles.taskPointsValue}>{task.points}</Text>
+                      <Text style={styles.taskPointsIcon}>⚡</Text>
+                    </View>
+                    <View style={[styles.taskCheckbox, styles.completedCheckbox]}>
+                      <Text style={styles.taskCheckmark}>✓</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
+      
+      {/* Animated stars */}
+      {animatingStars.map(star => (
+        <Animated.View
+          key={star.id}
+          style={{
+            position: 'absolute',
+            top: star.animation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [star.top, 100]
+            }),
+            left: star.animation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [star.left, 200]
+            }),
+            opacity: star.animation.interpolate({
+              inputRange: [0, 0.7, 1],
+              outputRange: [1, 1, 0]
+            }),
+            transform: [{
+              scale: star.animation.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [1, 1.5, 0.5]
+              })
+            }],
+            zIndex: 1000,
+          }}
+        >
+          <Text style={styles.starAnimation}>⭐</Text>
+        </Animated.View>
+      ))}
     </SafeAreaView>
   );
 };
@@ -279,6 +377,34 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  starAnimation: {
+    fontSize: 30,
+    color: '#FFD700',
+  },
+  completedSection: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  completedHeader: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  completedTaskCard: {
+    opacity: 0.7,
+    backgroundColor: '#F5F5F5',
+  },
+  completedTaskTitle: {
+    textDecorationLine: 'line-through',
+    color: '#666666',
+  },
+  completedCheckbox: {
+    backgroundColor: '#4CAF50',
   },
 });
 
