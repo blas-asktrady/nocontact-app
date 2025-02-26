@@ -36,7 +36,7 @@ const HomeScreen = () => {
           
           {/* Adventure progress bar */}
           <LinearGradient
-            colors={['#2EC4B6', '#26A69A']}
+            colors={['#5a67d3', '#4a57c3']}
             style={styles.adventureCard}
           >
             <View style={styles.adventureHeader}>
@@ -109,12 +109,12 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#2EC4B6',
+    backgroundColor: '#6a77e3',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: '#2EC4B6',
+    backgroundColor: '#6a77e3',
   },
   contentContainer: {
     paddingBottom: 20,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-    paddingBottom: 80,
+    paddingBottom: 20,
   },
   characterContainer: {
     alignItems: 'center',

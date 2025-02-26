@@ -85,7 +85,7 @@ const JournalScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#6a77e3',
     padding: 20,
   },
   header: {
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: '#fff',
   },
   button: {
     backgroundColor: '#4B69FF',

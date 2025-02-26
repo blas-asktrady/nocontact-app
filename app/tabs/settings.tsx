@@ -138,10 +138,10 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#6a77e3',
   },
   shareCard: {
-    backgroundColor: '#4B69FF',
+    backgroundColor: '#4a57c3',
     margin: 16,
     borderRadius: 20,
     padding: 20,
@@ -181,16 +181,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 13,
-    color: '#666666',
+    color: '#FFFFFF',
     marginLeft: 16,
     marginBottom: 8,
     letterSpacing: 1,
+    fontWeight: '600',
   },
   settingsItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#6a77e3',
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
@@ -210,16 +211,21 @@ const styles = StyleSheet.create({
   },
   settingsItemTitle: {
     fontSize: 17,
-    color: '#000000',
+    color: '#FFFFFF',
   },
   deleteAccount: {
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 32,
+    backgroundColor: '#FF3B30',
+    marginHorizontal: 16,
+    borderRadius: 10,
+    paddingHorizontal: 20,
   },
   deleteAccountText: {
-    color: '#FF3B30',
+    color: '#FFFFFF',
     fontSize: 17,
+    fontWeight: 'bold',
   },
 });
 

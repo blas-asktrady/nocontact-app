@@ -70,7 +70,7 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={navigateBack} style={styles.backButton}>
-        <Feather name="chevron-left" size={24} color="#000" />
+        <Feather name="chevron-left" size={24} color="#FFFFFF" />
       </TouchableOpacity>
       
       <View style={styles.iconsContainer}>
@@ -78,22 +78,9 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
           style={styles.iconButton}
           onPress={handleNewChat}
         >
-          <Feather name="message-circle" size={20} color="#FFF" />
+          <Feather name="message-circle" size={20} color="#000000" />
         </TouchableOpacity>
         
-        <TouchableOpacity 
-          style={styles.iconButton}
-          onPress={onVoiceChat}
-        >
-          <Feather name="phone" size={20} color="#FFF" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.iconButton}
-          onPress={handleChatHistory}
-        >
-          <Feather name="list" size={20} color="#FFF" />
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -106,6 +93,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: '#6a77e3',
   },
   backButton: {
     padding: 4,
@@ -116,7 +104,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconButton: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     width: 40,

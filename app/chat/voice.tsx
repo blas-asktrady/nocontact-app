@@ -62,23 +62,20 @@ const VoiceChatScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={navigateBack}>
-          <ChevronLeft size={24} color="#000000" />
+          <ChevronLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.timerContainer}>
           <Text style={styles.timer}>{formatTime(timer)}</Text>
         </View>
-        <TouchableOpacity style={styles.videoButton}>
-          <Feather name="video" size={24} color="#4B69FF" />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.avatarContainer}>
           <Image 
-            source={require('@/assets/images/react-logo.png')}
+            source={require('@/assets/images/face.png')}
             style={styles.avatar}
-            defaultSource={require('@/assets/images/react-logo.png')}
+            defaultSource={require('@/assets/images/face.png')}
           />
           {isListening && (
             <View style={styles.listeningContainer}>
@@ -113,7 +110,7 @@ const VoiceChatScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#6a77e3',
   },
   header: {
     flexDirection: 'row',
@@ -126,7 +123,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   timerContainer: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#EAEEF2',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
@@ -146,12 +143,15 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     alignItems: 'center',
+    marginTop: 50,
+    padding: 10,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 0,
     marginBottom: 24,
+    resizeMode: 'contain',
   },
   listeningContainer: {
     alignItems: 'center',
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   waveform: {
     height: 40,
     width: 200,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#EAEEF2',
     borderRadius: 20,
   },
   controls: {

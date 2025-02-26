@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image } from 'react-native';
 import { Link } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -16,8 +17,13 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
   
   return (
     <View style={styles.container}>
-      {/* Background */}
-      <View style={styles.background} />
+      {/* Background with Gradient */}
+      <LinearGradient
+        colors={['#3a47b3', '#4a57c3', '#5a67d3']}
+        style={styles.background}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
       
       {/* Tab Buttons */}
       <View style={styles.tabsContainer}>
@@ -112,8 +118,9 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 60,
+    height: 70,
     position: 'relative',
+    backgroundColor: '#6a77e3',
   },
   background: {
     position: 'absolute',
@@ -121,7 +128,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#4FD1C5', // Lighter teal background color
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -130,6 +138,7 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
     paddingHorizontal: 12,
+    paddingBottom: 5,
   },
   tab: {
     flex: 1,
@@ -156,7 +165,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 50,
     height: 50,
-    bottom: 30,
+    bottom: 35,
     left: '50%',
     marginLeft: -25,
     alignItems: 'center',
@@ -167,7 +176,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#4665F9',
+    backgroundColor: '#4665F9', // This blue color works well with the new theme
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

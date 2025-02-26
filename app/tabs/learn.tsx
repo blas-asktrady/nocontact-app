@@ -95,7 +95,7 @@ const LearnScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#6a77e3',
   },
   contentContainer: {
     paddingBottom: 20,
@@ -104,19 +104,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
     paddingBottom: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#5a67d3',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#4a57c3',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#FFFFFF',
+    opacity: 0.8,
     lineHeight: 24,
   },
   stagesContainer: {
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   stageCard: {

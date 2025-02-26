@@ -298,9 +298,9 @@ const ChatScreen = ({ characterId = '1' }) => {
       ]}>
         {!isUserMessage && (
           <Image 
-            source={require('@/assets/images/react-logo.png')} 
+            source={require('@/assets/images/face.png')} 
             style={styles.avatar}
-            defaultSource={require('@/assets/images/react-logo.png')}
+            defaultSource={require('@/assets/images/face.png')}
           />
         )}
         <View style={[
@@ -371,7 +371,7 @@ const ChatScreen = ({ characterId = '1' }) => {
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
-            placeholderTextColor="#A3A3A3"
+            placeholderTextColor="#FFFFFF"
             value={inputText}
             onChangeText={setInputText}
             returnKeyType="send"
@@ -393,7 +393,7 @@ const ChatScreen = ({ characterId = '1' }) => {
               <Feather 
                 name="send" 
                 size={24} 
-                color={inputText.trim() ? "#FFFFFF" : "#A3A3A3"} 
+                color={inputText.trim() ? "#6a77e3" : "#A3A3A3"}
               />
             )}
           </TouchableOpacity>
@@ -406,11 +406,12 @@ const ChatScreen = ({ characterId = '1' }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#6a77e3', // Changed from white to purple
   },
   chatContainer: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#6a77e3', // Changed to match the container background
   },
   chatContentContainer: {
     flexGrow: 1,
@@ -430,27 +431,35 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   messageBubble: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF', // White background for AI messages
     padding: 16,
     borderRadius: 20,
     maxWidth: '80%',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   userMessageBubble: {
-    backgroundColor: '#4B69FF',
+    backgroundColor: '#8592e5', // Lighter purple for user messages
     marginRight: 12,
+    borderWidth: 0,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    color: '#000000', // Default color for AI messages
+    color: '#000000', // Black text for AI messages
   },
   userMessageText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // White text for user messages
   },
   bottomSection: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: '#8592e5', // Lighter purple border
+    backgroundColor: '#8592e5', // Changed to lighter purple (#8592e5) from #6a77e3
   },
   quickActions: {
     flexDirection: 'row',
@@ -475,7 +484,7 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 12,
-    color: '#000000',
+    color: '#FFFFFF', // Changed from black to white
     textAlign: 'center',
   },
   inputContainer: {
@@ -484,23 +493,24 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#6a77e3', // Changed back to the original darker purple
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 12,
     marginRight: 12,
     fontSize: 16,
+    color: '#FFFFFF', // White text
   },
   sendButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#4B69FF',
+    backgroundColor: '#FFFFFF', // White send button
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#EEF0FF',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white for disabled state
   },
 });
 
