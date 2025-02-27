@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   stageMetaText: {
     fontSize: 12,
-    color: '#999',
+    color: '#777',
     marginLeft: 4,
   },
   stageChevronContainer: {

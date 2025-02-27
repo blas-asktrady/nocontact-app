@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import learningsData from '../../assets/learnings/learnings.json';
+import { router } from 'expo-router';
 
 const ArticleScreen = () => {
   const navigation = useNavigation();
@@ -23,7 +24,7 @@ const ArticleScreen = () => {
           author: {
             name: learningsData.blog.author_name,
             role: learningsData.blog.author_role,
-            avatar: learningsData.blog.author_avatar_url
+            avatar: require('@/assets/images/emily.jpg')
           },
           duration: foundStage.estimated_duration || learningsData.blog.duration,
           audioUrl: learningsData.blog.audio_url
@@ -35,6 +36,18 @@ const ArticleScreen = () => {
   const handleAudioPlay = () => {
     // Implement audio playback functionality
     console.log('Playing audio from:', article?.audioUrl);
+  };
+
+  const handleBackPress = () => {
+    // Check if we can go back
+    const canGoBack = navigation.canGoBack();
+    
+    if (canGoBack) {
+      navigation.goBack();
+    } else {
+      // Redirect to /learn if we can't go back
+        router.replace('/tabs/learn');
+    }
   };
 
   if (!article) {
@@ -51,7 +64,7 @@ const ArticleScreen = () => {
         {/* Back Button */}
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
         >
           <Feather name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
@@ -62,7 +75,7 @@ const ArticleScreen = () => {
         {/* Author Info */}
         <View style={styles.authorContainer}>
           <Image
-            source={{ uri: article.author.avatar }}
+            source={article.author.avatar}
             style={styles.authorAvatar}
           />
           <View style={styles.authorInfo}>
@@ -72,7 +85,10 @@ const ArticleScreen = () => {
         </View>
 
         {/* Read Time */}
-        <Text style={styles.readTime}>{article.duration} read</Text>
+        <View style={styles.readTimeContainer}>
+          <Feather name="clock" size={16} color="#666666" />
+          <Text style={styles.readTime}>{article.duration} read</Text>
+        </View>
 
         {/* Audio Player Button */}
         <TouchableOpacity 
@@ -165,10 +181,15 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginTop: 2,
   },
+  readTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   readTime: {
     fontSize: 16,
     color: '#666666',
-    marginBottom: 20,
+    marginLeft: 6,
   },
   audioButton: {
     flexDirection: 'row',
