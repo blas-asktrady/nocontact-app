@@ -34,22 +34,6 @@ const SurveyScreen = () => {
   const [showPicker, setShowPicker] = useState(false);
   const { user, isLoading } = useUser(); // Get user and isLoading from useUser hook
 
-  // Check authentication and onboarding status when component loads
-  useEffect(() => {
-    if (!isLoading) {
-      // If no user is logged in, redirect to login page
-      if (!user) {
-        router.replace('/');
-        return;
-      }
-      
-      // If user has already completed onboarding, redirect to home
-      if (user.isOnboardingCompleted) {
-        router.replace('/tabs/home');
-      }
-    }
-  }, [user, isLoading]);
-
   const handleDateChange = (event: any, selectedDate: any) => {
     setShowPicker(false);
     if (event.type === 'set' && selectedDate) {

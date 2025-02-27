@@ -21,26 +21,6 @@ export default function HomeScreen() {
       duration: 1000,
       useNativeDriver: true,
     }).start();
-    
-    // Check if user is logged in and navigate based on onboarding status
-    if (user) {
-      console.log('User is logged in:', user);
-      
-      // Check if onboarding is completed
-      if (user.isOnboardingCompleted) {
-        // Redirect to home if onboarding is completed
-        if (window.location.pathname !== '/tabs/home') {
-          router.push('/tabs/home');
-        }
-      } else {
-        // Redirect to survey if onboarding is not completed
-        if (window.location.pathname !== '/survey') {
-          router.push('/survey');
-        }
-      }
-    } else {
-      console.log('User is not logged in');
-    }
   }, [user]);
   
   const handleGetStarted = () => {
