@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 70,
     position: 'relative',
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#fff',
   },
   homeContainer: {
     backgroundColor: '#57a836',

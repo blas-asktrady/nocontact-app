@@ -42,8 +42,24 @@ const ChatScreen = ({ characterId = '1' }) => {
 
   // Initialize message state from local storage/context
   useEffect(() => {
-    // Initially load saved messages only if our local state is empty
-    if (savedMessages && savedMessages.length > 0 && messages.length === 0) {
+    // Add initial welcome message if no messages exist
+    if (messages.length === 0) {
+      const welcomeMessageId = `ai-welcome-${Date.now()}`;
+      const welcomeMessage: Message = {
+        id: welcomeMessageId,
+        content: "Hi there! 👋 How are you feeling today?",
+        senderType: 'ai',
+        senderId: characterId,
+        receiverId: 'user123',
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Add welcome message to state
+      addMessageToState(welcomeMessage);
+    }
+    
+    // Initially load saved messages only if our local state is empty (except for welcome message)
+    if (savedMessages && savedMessages.length > 0 && messages.length <= 1) {
       const uniqueMessages = savedMessages.filter(msg => {
         if (!messageIdsRef.current.has(msg.id || '')) {
           messageIdsRef.current.add(msg.id || '');
@@ -52,7 +68,7 @@ const ChatScreen = ({ characterId = '1' }) => {
         return false;
       });
       
-      setMessages(uniqueMessages);
+      setMessages(prevMessages => [...prevMessages, ...uniqueMessages]);
     }
     
     // Cleanup function for component unmount
@@ -371,7 +387,7 @@ const ChatScreen = ({ characterId = '1' }) => {
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
-            placeholderTextColor="#FFFFFF"
+            placeholderTextColor="#999999"
             value={inputText}
             onChangeText={setInputText}
             returnKeyType="send"
@@ -393,7 +409,7 @@ const ChatScreen = ({ characterId = '1' }) => {
               <Feather 
                 name="send" 
                 size={24} 
-                color={inputText.trim() ? "#6a77e3" : "#A3A3A3"}
+                color={inputText.trim() ? "#fff" : "#A3A3A3"}
               />
             )}
           </TouchableOpacity>
@@ -406,12 +422,12 @@ const ChatScreen = ({ characterId = '1' }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6a77e3', // Changed from white to purple
+    backgroundColor: '#FFFFFF', // Changed from purple to white to match journal
   },
   chatContainer: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#6a77e3', // Changed to match the container background
+    backgroundColor: '#FFFFFF', // Changed to white to match journal
   },
   chatContentContainer: {
     flexGrow: 1,
@@ -431,7 +447,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   messageBubble: {
-    backgroundColor: '#FFFFFF', // White background for AI messages
+    backgroundColor: '#ECEEF8', // Changed to light blue/gray from journal
     padding: 16,
     borderRadius: 20,
     maxWidth: '80%',
@@ -443,14 +459,14 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   userMessageBubble: {
-    backgroundColor: '#8592e5', // Lighter purple for user messages
+    backgroundColor: '#4B69FF', // Changed to match journal button color
     marginRight: 12,
     borderWidth: 0,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    color: '#000000', // Black text for AI messages
+    color: '#666', // Changed to match journal text color
   },
   userMessageText: {
     color: '#FFFFFF', // White text for user messages
@@ -458,8 +474,8 @@ const styles = StyleSheet.create({
   bottomSection: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#8592e5', // Lighter purple border
-    backgroundColor: '#8592e5', // Changed to lighter purple (#8592e5) from #6a77e3
+    borderTopColor: '#ECEEF8', // Changed to light blue/gray from journal
+    backgroundColor: '#FFFFFF', // Changed to white to match journal
   },
   quickActions: {
     flexDirection: 'row',
@@ -484,7 +500,7 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 12,
-    color: '#FFFFFF', // Changed from black to white
+    color: '#666',
     textAlign: 'center',
   },
   inputContainer: {
@@ -493,24 +509,24 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#6a77e3', // Changed back to the original darker purple
+    backgroundColor: '#F0F2F5', // Lighter gray as shown in screenshot
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 12,
     marginRight: 12,
     fontSize: 16,
-    color: '#FFFFFF', // White text
+    color: '#000000',
   },
   sendButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#FFFFFF', // White send button
+    backgroundColor: '#6a77e3', // Light gray for send button background
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white for disabled state
+    backgroundColor: 'rgba(170, 175, 186, 0.5)', // Semi-transparent white for disabled state
   },
 });
 

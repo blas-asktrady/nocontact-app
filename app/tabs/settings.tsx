@@ -1,11 +1,11 @@
+import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 
 const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
 
-  const SettingsItem = ({ icon, title, hasToggle, hasArrow, onPress, value, onValueChange }) => (
+  const SettingsItem = ({ emoji, title, hasToggle, hasArrow, onPress, value, onValueChange }) => (
     <TouchableOpacity 
       style={styles.settingsItem}
       onPress={onPress}
@@ -13,7 +13,7 @@ const SettingsScreen = () => {
     >
       <View style={styles.settingsItemLeft}>
         <View style={styles.iconContainer}>
-          <Feather name={icon} size={22} color="#4B69FF" />
+          <Text style={styles.emoji}>{emoji}</Text>
         </View>
         <Text style={styles.settingsItemTitle}>{title}</Text>
       </View>
@@ -23,16 +23,22 @@ const SettingsScreen = () => {
           onValueChange={onValueChange}
           trackColor={{ false: '#D1D1D6', true: '#4B69FF' }}
           thumbColor="#FFFFFF"
+          ios_backgroundColor="#D1D1D6"
+          thumbTintColor="#FFFFFF"
+          style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}
         />
       )}
       {hasArrow && (
-        <Feather name="chevron-right" size={24} color="#CCCCCC" />
+        <Text style={styles.arrowEmoji}>›</Text>
       )}
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       {/* Share Card */}
       <View style={styles.shareCard}>
         <View style={styles.shareContent}>
@@ -51,16 +57,23 @@ const SettingsScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>PREFERENCES</Text>
         <SettingsItem
-          icon="bell"
+          emoji="📅"
+          title="Change No Contact Day"
+          hasArrow
+          onPress={() => {}}
+        />
+        <SettingsItem
+          emoji="🔔"
           title="Notifications"
           hasToggle
           value={notificationsEnabled}
           onValueChange={setNotificationsEnabled}
         />
         <SettingsItem
-          icon="refresh-ccw"
+          emoji="🔄"
           title="Clear Chat History"
           hasArrow
+          onPress={() => {}}
         />
       </View>
 
@@ -68,19 +81,22 @@ const SettingsScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>HELP</Text>
         <SettingsItem
-          icon="message-square"
+          emoji="💬"
           title="Share Product Feedback"
           hasArrow
+          onPress={() => {}}
         />
         <SettingsItem
-          icon="help-circle"
+          emoji="❓"
           title="Support"
           hasArrow
+          onPress={() => {}}
         />
         <SettingsItem
-          icon="lock"
+          emoji="🔒"
           title="Manage Subscription"
           hasArrow
+          onPress={() => {}}
         />
       </View>
 
@@ -88,14 +104,16 @@ const SettingsScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>LEGAL</Text>
         <SettingsItem
-          icon="file-text"
+          emoji="📄"
           title="Terms of Service"
           hasArrow
+          onPress={() => {}}
         />
         <SettingsItem
-          icon="shield"
+          emoji="🛡️"
           title="Privacy Policy"
           hasArrow
+          onPress={() => {}}
         />
       </View>
 
@@ -110,7 +128,7 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#FFFFFF',
   },
   shareCard: {
     backgroundColor: '#4a57c3',
@@ -148,12 +166,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginRight: 8,
   },
-  section: {
-    marginBottom: 32,
-  },
   sectionTitle: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: '#000000',
     marginLeft: 16,
     marginBottom: 8,
     letterSpacing: 1,
@@ -163,9 +178,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECEEF8',
   },
   settingsItemLeft: {
     flexDirection: 'row',
@@ -176,22 +193,30 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EEF0FF',
+    backgroundColor: '#ECEEF8',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
+  emoji: {
+    fontSize: 20,
+  },
+  arrowEmoji: {
+    fontSize: 24,
+    color: '#9CA3AF',
+  },
   settingsItemTitle: {
     fontSize: 17,
-    color: '#FFFFFF',
+    color: '#000000',
   },
   deleteAccount: {
     paddingVertical: 16,
     alignItems: 'center',
+    marginTop: 24,
     marginBottom: 32,
     backgroundColor: '#FF3B30',
     marginHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 20,
   },
   deleteAccountText: {

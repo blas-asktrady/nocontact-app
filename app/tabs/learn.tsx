@@ -95,29 +95,28 @@ const LearnScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#FFFFFF',
   },
   contentContainer: {
     paddingBottom: 20,
   },
   headerContainer: {
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 20,
     paddingBottom: 20,
-    backgroundColor: '#5a67d3',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#4a57c3',
+    borderBottomColor: '#ECEEF8',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#FFFFFF',
-    opacity: 0.8,
+    color: '#666',
     lineHeight: 24,
   },
   stagesContainer: {
@@ -127,12 +126,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 16,
   },
   stageCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ECEEF8',
     borderRadius: 12,
     marginBottom: 16,
     shadowColor: '#000',
@@ -147,7 +146,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#4B69FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -155,7 +154,7 @@ const styles = StyleSheet.create({
   stageNumber: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: '#FFFFFF',
   },
   stageContentContainer: {
     flex: 1,
@@ -163,12 +162,12 @@ const styles = StyleSheet.create({
   stageTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: '#000000',
     marginBottom: 4,
   },
   stageDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#666',
     marginBottom: 8,
   },
   stageMetaContainer: {
@@ -181,7 +180,7 @@ const styles = StyleSheet.create({
   },
   stageMetaText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#999',
     marginLeft: 4,
   },
   stageChevronContainer: {

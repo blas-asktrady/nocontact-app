@@ -70,7 +70,7 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={navigateBack} style={styles.backButton}>
-        <Feather name="chevron-left" size={24} color="#FFFFFF" />
+        <Feather name="chevron-left" size={24} color="#000000" />
       </TouchableOpacity>
       
       <View style={styles.iconsContainer}>
@@ -78,7 +78,7 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
           style={styles.iconButton}
           onPress={handleNewChat}
         >
-          <Feather name="message-circle" size={20} color="#000000" />
+          <Feather name="message-circle" size={20} color="#ffff" />
         </TouchableOpacity>
         
       </View>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#FFFFFF',
   },
   backButton: {
     padding: 4,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#6a77e3',
     alignItems: 'center',
     justifyContent: 'center',
     width: 40,
