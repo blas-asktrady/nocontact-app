@@ -88,7 +88,7 @@ export default function HomeScreen() {
 
             <ThemedView style={styles.stats}>
               <ThemedText style={styles.ratingText}>⭐️⭐️⭐️⭐️⭐️</ThemedText>
-              <ThemedText style={styles.achievementText}>Helped 100+ people feel happier</ThemedText>
+              <ThemedText style={styles.achievementText}>Helped 100+ people overcome breakups</ThemedText>
             </ThemedView>
           </ThemedView>
 

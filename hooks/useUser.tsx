@@ -205,6 +205,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(userData);
       setIsLoading(false);
+      
+      // Don't redirect here - let the _layout component handle redirects
     } catch (error) {
       console.error('Error setting user profile:', error);
       setIsLoading(false);

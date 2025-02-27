@@ -34,7 +34,7 @@ const SurveyScreen = () => {
 
   const [step, setStep] = useState(1);
   const [showPicker, setShowPicker] = useState(false);
-  const { user, isLoading } = useUser(); // Get user and isLoading from useUser hook
+  const { user, isLoading, signOut } = useUser(); // Get user and isLoading from useUser hook
 
   const handleDateChange = (event: any, selectedDate: any) => {
     setShowPicker(false);
@@ -68,7 +68,12 @@ const SurveyScreen = () => {
 
   const handleBack = () => {
     if (step === 1) {
-      router.replace('/');
+      // Log out the user instead of just navigating back
+      if (user) {
+        signOut();
+      } else {
+        router.replace('/');
+      }
     } else {
       setStep(step - 1);
     }
@@ -84,6 +89,7 @@ const SurveyScreen = () => {
 
   // Save current step's answer to the database
   const saveCurrentStepAnswer = () => {
+    console.log('Saving answer for step:', user?.id);
     if (!user?.id) return; // Add a guard clause
     
     switch (step) {
