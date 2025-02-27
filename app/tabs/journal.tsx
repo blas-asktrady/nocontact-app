@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { useJournal } from '@/hooks/useJournal';
 import { getUserById } from '@/services/userService';
 
 const JournalScreen = () => {
-  const { journals } = useJournal();
+  const { journals, isLoading } = useJournal();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Add a useEffect to monitor journals changes
   React.useEffect(() => {
@@ -46,18 +47,27 @@ const JournalScreen = () => {
   };
 
   // Render each journal entry
-  const renderJournalEntry = React.useCallback(({ item }: { item: typeof journals[0] }) => (
-    <TouchableOpacity 
-      style={styles.entryContainer}
-      onPress={() => handleEntryPress(item)}
-    >
-      <View style={styles.entryHeader}>
-        <Text style={styles.entryDate}>{formatDisplayDate(item.timestamp)}</Text>
-      </View>
-      <Text style={styles.entryDescription}>{item.description}</Text>
-      <Text style={styles.entryTimestamp}>{formatShortDate(item.timestamp)}</Text>
-    </TouchableOpacity>
-  ), []);
+  const renderJournalEntry = React.useCallback(({ item }: { item: typeof journals[0] }) => {
+    // Create a preview of the content (first 150 characters)
+    const contentPreview = item.content && item.content.length > 150 
+      ? `${item.content.substring(0, 40)}...` 
+      : item.content;
+      
+    return (
+      <TouchableOpacity 
+        style={styles.entryContainer}
+        onPress={() => handleEntryPress(item)}
+      >
+        <View style={styles.entryHeader}>
+          <Text style={styles.entryDate}>{formatDisplayDate(item.timestamp)}</Text>
+        </View>
+        <Text style={styles.entryDescription} numberOfLines={3} ellipsizeMode="tail">
+          {contentPreview}
+        </Text>
+        <Text style={styles.entryTimestamp}>{formatShortDate(item.timestamp)}</Text>
+      </TouchableOpacity>
+    );
+  }, []);
 
   return (
     <View style={styles.container}>

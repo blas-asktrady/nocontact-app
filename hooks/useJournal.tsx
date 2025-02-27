@@ -103,11 +103,14 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
         timestamp: updatedEntry.timestamp || Date.now()
       };
       
+      // Update the journals state with the complete updated entry
       setJournals(prevJournals =>
         prevJournals.map(journal =>
           journal.id === updatedEntry.id ? entryWithValidTimestamp : journal
         )
       );
+      
+      console.log('Journals updated:', journals);
     } catch (error) {
       console.error('Error updating journal entry:', error);
       throw error;

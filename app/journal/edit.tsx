@@ -8,6 +8,9 @@ type RootStackParamList = {
   'journal/edit': {
     content?: string;
     id?: string;
+    timestamp?: string;
+    description?: string;
+    type?: string;
   };
   'tabs': {
     screen?: string;
@@ -23,13 +26,23 @@ export default function EditJournalScreen() {
   const [journalEntry, setJournalEntry] = useState(route.params?.content || '');
 
   const handleDone = () => {
-    // Here you would typically save the changes
+    // Save the changes and navigate back
     try {
-      const canGoBack = navigation.canGoBack();
-      if (canGoBack) {
-        navigation.goBack();
+      // Pass the updated content back to the previous screen
+      if (route.params?.id) {
+        // If we have an ID, this is an existing entry
+        navigation.navigate('journal/new', {
+          id: route.params.id,
+          content: journalEntry,
+          timestamp: route.params.timestamp,
+          description: route.params.description,
+          type: route.params.type
+        });
       } else {
-        navigation.navigate('tabs', { screen: 'journal' });
+        // For a new entry
+        navigation.navigate('journal/new', {
+          content: journalEntry
+        });
       }
     } catch (error) {
       console.error('Navigation error:', error);

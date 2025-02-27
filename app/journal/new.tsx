@@ -88,6 +88,12 @@ export default function NewJournalScreen() {
         description: description || journalEntry.slice(0, 100), // First 100 chars as description
         type: type || 'entry',
         content: journalEntry
+      }).then(() => {
+        // Always navigate to the journal tab after saving
+        navigation.navigate('tabs', { screen: 'journal' });
+      }).catch(error => {
+        console.error('Error updating journal entry:', error);
+        Alert.alert('Error', 'Failed to update journal entry');
       });
     } else {
       console.log('add entry');
@@ -96,13 +102,18 @@ export default function NewJournalScreen() {
         description: journalEntry.slice(0, 100), // First 100 chars as description
         type: 'entry',
         content: journalEntry
+      }).then(() => {
+        // Always navigate to the journal tab after saving
+        navigation.navigate('tabs', { screen: 'journal' });
+      }).catch(error => {
+        console.error('Error adding journal entry:', error);
+        Alert.alert('Error', 'Failed to add journal entry');
       });
     }
-    navigateBack();
   };
 
   const handleCancel = () => {
-    navigateBack();
+    navigation.navigate('tabs', { screen: 'journal' });
   };
 
   const handleEdit = () => {
@@ -153,13 +164,13 @@ export default function NewJournalScreen() {
               onPress={handleEdit}
               style={styles.iconButton}
             >
-              <Pencil size={24} color="#6366F1" />
+              <Pencil size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={handleDelete}
               style={styles.iconButton}
             >
-              <Trash2 size={24} color="#EF4444" />
+              <Trash2 size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         )}
@@ -170,17 +181,23 @@ export default function NewJournalScreen() {
       </ThemedText>
 
       <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
+        <TouchableOpacity 
+          style={styles.inputWrapper}
+          onPress={handleEdit}
+          activeOpacity={0.7}
+        >
           <TextInput
             style={styles.input}
             placeholder="Write about your recovery journey, thoughts, and feelings..."
-            placeholderTextColor="#8E8E93"
+            placeholderTextColor="#999"
             multiline
             textAlignVertical="top"
             value={journalEntry}
             onChangeText={setJournalEntry}
+            editable={false}
+            pointerEvents="none"
           />
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -205,14 +222,14 @@ export default function NewJournalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#6a77e3',
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    marginBottom: 24,
   },
   titleContainer: {
     flex: 1,
@@ -226,59 +243,55 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   title: {
-    fontSize: 34,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#000000',
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: 17,
-    color: '#8E8E93',
+    fontSize: 16,
+    color: '#FFFFFF',
     marginBottom: 16,
-    paddingHorizontal: 16,
   },
   inputContainer: {
     flex: 1,
-    marginHorizontal: 16,
     marginBottom: 16,
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
+    backgroundColor: '#F8F9FE',
+    borderRadius: 12,
+    borderWidth: 0,
   },
   input: {
     flex: 1,
-    fontSize: 17,
-    color: '#000000',
+    fontSize: 16,
+    color: '#666',
     padding: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 8,
+    gap: 12,
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 25,
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F2F2F7',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   saveButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#4B69FF',
   },
   cancelButtonText: {
-    fontSize: 17,
-    color: '#8E8E93',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   saveButtonText: {
-    fontSize: 17,
+    fontSize: 16,
+    fontWeight: '500',
     color: '#FFFFFF',
   },
 });
