@@ -164,13 +164,13 @@ export default function NewJournalScreen() {
               onPress={handleEdit}
               style={styles.iconButton}
             >
-              <Pencil size={24} color="#FFFFFF" />
+              <Pencil size={24} color={styles.title.color} />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={handleDelete}
               style={styles.iconButton}
             >
-              <Trash2 size={24} color="#FFFFFF" />
+              <Trash2 size={24} color={styles.title.color} />
             </TouchableOpacity>
           </View>
         )}
@@ -187,9 +187,9 @@ export default function NewJournalScreen() {
           activeOpacity={0.7}
         >
           <TextInput
-            style={styles.input}
+            style={[styles.input]}
             placeholder="Write about your recovery journey, thoughts, and feelings..."
-            placeholderTextColor="#999"
+            placeholderTextColor="#757575" // Darker for better contrast
             multiline
             textAlignVertical="top"
             value={journalEntry}
@@ -209,20 +209,29 @@ export default function NewJournalScreen() {
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.button, styles.saveButton]} 
+          style={[
+            styles.button, 
+            styles.saveButton,
+            journalEntry.trim() === '' && styles.disabledButton
+          ]} 
           onPress={handleSave}
+          disabled={journalEntry.trim() === ''}
         >
-          <ThemedText style={styles.saveButtonText}>Save</ThemedText>
+          <ThemedText style={[
+            styles.saveButtonText,
+            journalEntry.trim() === '' && styles.disabledButtonText
+          ]}>Save</ThemedText>
         </TouchableOpacity>
       </View>
     </ThemedView>
   );
 }
 
+// Modified styles with improved colors
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6a77e3',
+    backgroundColor: '#fff', // This should be handled by ThemedView
     padding: 20,
   },
   header: {
@@ -240,16 +249,16 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   iconButton: {
-    padding: 4,
+    padding: 8, // Increased from 4 for better touch target
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000',
   },
   subtitle: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#000',
     marginBottom: 16,
   },
   inputContainer: {
@@ -258,14 +267,15 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#ECEEF8', // Slightly darker for better contrast
     borderRadius: 12,
-    borderWidth: 0,
+    borderWidth: 1, // Added light border for definition
+    borderColor: '#D0D4E8', // Light border color
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#666',
+    // Remove hardcoded color, let TextInput handle themed colors
     padding: 16,
   },
   buttonContainer: {
@@ -279,10 +289,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#E57373', // More visible red with better contrast
   },
   saveButton: {
-    backgroundColor: '#4B69FF',
+    backgroundColor: '#4B69FF', // Keep the current blue
   },
   cancelButtonText: {
     fontSize: 16,
@@ -293,5 +303,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  disabledButton: {
+    backgroundColor: '#A0A0A0', // Gray color for disabled state
+    opacity: 0.7,
+  },
+  disabledButtonText: {
+    color: '#E0E0E0', // Lighter text for disabled state
   },
 });

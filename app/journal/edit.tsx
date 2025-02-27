@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -24,6 +24,19 @@ export default function EditJournalScreen() {
   const navigation = useNavigation<NavigationProps>();
   const route = useRoute<RouteProps>();
   const [journalEntry, setJournalEntry] = useState(route.params?.content || '');
+
+  // Update journalEntry when route.params changes
+  useEffect(() => {
+    setJournalEntry(route.params?.content || '');
+  }, [route.params]);
+
+  // Add useEffect to reset state when component unmounts
+  useEffect(() => {
+    return () => {
+      // This cleanup function runs when the component unmounts
+      setJournalEntry('');
+    };
+  }, []);
 
   const handleDone = () => {
     // Save the changes and navigate back
