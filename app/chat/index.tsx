@@ -5,6 +5,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { Message, useMessages } from '@/hooks/useMessages';
 import { Header } from './components/Header';
 import { usePanda } from '@/hooks/usePanda'; 
+import greetingsData from './greetings.json';
 
 type RootStackParamList = {
   Voice: undefined;
@@ -74,8 +75,12 @@ const ChatScreen = ({ characterId = '1' }) => {
   useEffect(() => {
     // Add initial welcome message if no messages exist
     if (messages.length === 0) {
-      // Start typing animation instead of immediately adding message
-      simulateTyping("Hi there! 👋 How are you feeling today?");
+      // Get a random greeting from the greetings.json file
+      const greetings = greetingsData.greetings;
+      const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      
+      // Start typing animation with the random greeting
+      simulateTyping(randomGreeting);
     }
     
     // Initially load saved messages only if our local state is empty (except for welcome message)
