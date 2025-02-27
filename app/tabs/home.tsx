@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground, Dimensions, Platform } from 'react-native';
 import * as Storage from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import useUserSettings from '@/hooks/useUserSettings';
+import { useUser } from '@/hooks/useUser';
 
 // Get screen dimensions for positioning calculations
 const { width, height } = Dimensions.get('window');
@@ -43,12 +46,16 @@ const storage = {
 };
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
+  const { user } = useUser();
+  const { userSettings, refetchSettings } = useUserSettings(user?.id || '');
+  
   const [timeElapsed, setTimeElapsed] = useState({
-    months: 50,
-    days: 1,
-    hours: 18,
-    minutes: 37,
-    seconds: 50,
+    months: 0,
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
   });
   
   // Add state for saved flower positions
@@ -74,6 +81,46 @@ const HomeScreen = () => {
     left: width * 0.32, // Widened slightly to protect the ears from the sides
     right: width * 0.68,
   };
+
+  // Refetch settings when the component focuses
+  useEffect(() => {
+    // Set up a focus listener to refetch settings when the screen comes into focus
+    const unsubscribe = navigation?.addListener('focus', () => {
+      if (user?.id) {
+        refetchSettings();
+        
+        // Force immediate recalculation of time elapsed if we have a no_contact_date
+        if (userSettings?.no_contact_date) {
+          const startDate = new Date(userSettings.no_contact_date);
+          const now = new Date();
+          const diff = now - startDate;
+          
+          // Convert milliseconds to readable units
+          const seconds = Math.floor((diff / 1000) % 60);
+          const minutes = Math.floor((diff / (1000 * 60)) % 60);
+          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          
+          // Calculate days and months (approximate)
+          const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const months = Math.floor(totalDays / 30);
+          const days = totalDays % 30;
+          
+          setTimeElapsed({
+            months,
+            days,
+            hours,
+            minutes,
+            seconds,
+          });
+          
+          // Clear saved flower positions to force regeneration
+          setSavedFlowerPositions(null);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, refetchSettings, user?.id, userSettings?.no_contact_date]);
 
   // Load saved flower positions from storage
   useEffect(() => {
@@ -253,13 +300,33 @@ const HomeScreen = () => {
   }, [totalDays, savedFlowerPositions]);
 
   useEffect(() => {
-    // Set the start date (current date minus the time elapsed)
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - timeElapsed.months);
-    startDate.setDate(startDate.getDate() - timeElapsed.days);
-    startDate.setHours(startDate.getHours() - timeElapsed.hours);
-    startDate.setMinutes(startDate.getMinutes() - timeElapsed.minutes);
-    startDate.setSeconds(startDate.getSeconds() - timeElapsed.seconds);
+    // Only proceed if we have a valid no_contact_date
+    if (!userSettings?.no_contact_date) return;
+    
+    // Set the start date from userSettings
+    const startDate = new Date(userSettings.no_contact_date);
+    
+    // Immediately calculate current time elapsed
+    const now = new Date();
+    const diff = now - startDate;
+    
+    // Convert milliseconds to readable units
+    const seconds = Math.floor((diff / 1000) % 60);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    
+    // Calculate days and months (approximate)
+    const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const months = Math.floor(totalDays / 30);
+    const days = totalDays % 30;
+    
+    setTimeElapsed({
+      months,
+      days,
+      hours,
+      minutes,
+      seconds,
+    });
     
     const timer = setInterval(() => {
       const now = new Date();
@@ -301,9 +368,9 @@ const HomeScreen = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [userSettings?.no_contact_date]); // Depend on no_contact_date
 
-  // Load saved time elapsed on initial mount
+  // Load saved time elapsed on initial mount (fallback if userSettings not available)
   useEffect(() => {
     const loadSavedTime = async () => {
       try {
@@ -316,8 +383,11 @@ const HomeScreen = () => {
       }
     };
     
-    loadSavedTime();
-  }, []);
+    // Only load from storage if we don't have userSettings yet
+    if (!userSettings?.no_contact_date) {
+      loadSavedTime();
+    }
+  }, [userSettings?.no_contact_date]);
 
   return (
     <ImageBackground 

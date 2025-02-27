@@ -445,6 +445,7 @@ export type Database = {
           allowed_monthly_messages: number
           id: string
           messages_used_this_month: number
+          no_contact_date: string | null
           notification_preferences: Json | null
           profile_picture_url: string | null
           streak_count: number
@@ -457,6 +458,7 @@ export type Database = {
           allowed_monthly_messages?: number
           id: string
           messages_used_this_month?: number
+          no_contact_date?: string | null
           notification_preferences?: Json | null
           profile_picture_url?: string | null
           streak_count?: number
@@ -469,6 +471,7 @@ export type Database = {
           allowed_monthly_messages?: number
           id?: string
           messages_used_this_month?: number
+          no_contact_date?: string | null
           notification_preferences?: Json | null
           profile_picture_url?: string | null
           streak_count?: number
@@ -553,7 +556,6 @@ export type Database = {
     }
     Enums: {
       content_type: "article" | "video" | "audio" | "exercise"
-      journal_type: "mood" | "gratitude" | "reflection" | "goal" | "custom"
       sender_type: "user" | "ai" | "system"
       subscription_tier: "free" | "paid"
     }

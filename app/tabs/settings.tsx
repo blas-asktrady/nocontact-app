@@ -13,7 +13,8 @@ const SettingsScreen = () => {
     userSettings, 
     isLoading, 
     updateNoContactDate, 
-    updateNotificationPreferences 
+    updateNotificationPreferences,
+    refetchSettings
   } = useUserSettings(user?.id || '');
 
   // Initialize notification state from user settings
@@ -51,6 +52,7 @@ const SettingsScreen = () => {
     setShowDatePicker(false);
     if (selectedDate && event.type !== 'dismissed') {
       await updateNoContactDate(selectedDate);
+      await refetchSettings(); // Refetch settings after update
     }
   };
 
@@ -167,7 +169,8 @@ const SettingsScreen = () => {
             } else {
               // For non-iOS devices, generate a random date and update
               const randomDate = generateRandomDate();
-              updateNoContactDate(randomDate);
+              updateNoContactDate(randomDate)
+                .then(() => refetchSettings()); // Refetch settings after update
             }
           }}
         />
