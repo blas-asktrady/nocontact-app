@@ -25,7 +25,7 @@ interface ActionButtonProps {
 const ChatScreen = ({ characterId = '1' }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   // Keep useMessages for message storage/history if needed
-  const { messages: savedMessages, addNewMessage } = useMessages(); 
+  const { messages: savedMessages, addNewMessage, clearChat } = useMessages(); 
   // Use the new chat hook for WebSocket communication
   const { sendMessage, isSendingMessage } = usePanda();
   
@@ -101,8 +101,13 @@ const ChatScreen = ({ characterId = '1' }) => {
       if (activeWebSocketCleanup.current) {
         activeWebSocketCleanup.current();
       }
+      
+      // Clear messages when unmounting the component
+      setMessages([]);
+      messageIdsRef.current.clear();
+      clearChat(); // Call the clearChat function from useMessages
     };
-  }, []);
+  }, [clearChat]);
   
   // Add a new message to the local state and update the message ID set
   const addMessageToState = (message: Message) => {

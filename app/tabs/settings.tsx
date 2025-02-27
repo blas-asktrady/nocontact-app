@@ -161,7 +161,7 @@ const SettingsScreen = () => {
         <Text style={styles.sectionTitle}>PREFERENCES</Text>
         <SettingsItem
           emoji="📅"
-          title="Change No Contact Day"
+          title="Change Initial NoContact Day"
           hasArrow
           onPress={() => {
             if (Platform.OS === 'ios') {
