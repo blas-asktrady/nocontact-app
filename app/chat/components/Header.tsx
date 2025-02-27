@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useMessages } from '@/hooks/useMessages';
 
@@ -22,7 +24,8 @@ interface HeaderProps {
 
 export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { clearChat } = useMessages();
+  const { clearChat, messages } = useMessages();
+  const hasMessages = messages.length > 0;
 
   const navigateBack = () => {
     try {
@@ -43,6 +46,8 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
   };
 
   const handleNewChat = () => {
+    if (!hasMessages) return;
+    
     clearChat();
     if (onNewChat) {
       onNewChat();
@@ -79,12 +84,25 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
       </View>
       
       <View style={styles.iconsContainer}>
+        {/*
+        <TouchableOpacity 
+          style={[styles.iconButton, !hasMessages && styles.disabledIconButton]}
+          onPress={handleNewChat}
+          disabled={!hasMessages}
+        >
+          <MaterialCommunityIcons 
+            name="chat-plus-outline" 
+            size={24} 
+            color={hasMessages ? "#fff" : "#c0c0c0"} 
+          />
+        </TouchableOpacity>
         <TouchableOpacity 
           style={styles.iconButton}
-          onPress={handleNewChat}
+          onPress={handleChatHistory}
         >
-          <Feather name="message-circle" size={20} color="#ffff" />
+          <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
         </TouchableOpacity>
+        */}
       </View>
     </View>
   );
@@ -129,5 +147,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
+  },
+  disabledIconButton: {
+    backgroundColor: '#d0d0d0',
   },
 });

@@ -156,40 +156,42 @@ const ChatScreen = ({ characterId = '1' }) => {
     navigation.navigate('chat/voice');
   };
   
-  // Helper function to filter out timeout messages or other system messages
+  // Replace your existing filterSystemMessages function with this improved version
   const filterSystemMessages = (content: string): string => {
-    // Check for timeout message JSON
-    if (content.endsWith('{"type": "timeout"}')) {
-      return content.replace('{"type": "timeout"}', '').trim();
-    }
+    // Check for any JSON-formatted system messages, including timeout
+    const jsonPattern = /\{"type":\s*"[^"]+"\}/g;
+    let filteredContent = content.replace(jsonPattern, '');
     
     // Process line breaks and normalize whitespace
-    let filteredContent = content.replace(/\\n/g, '\n');
+    filteredContent = filteredContent.replace(/\\n/g, '\n');
     
-    // Remove any potential duplicate content that might occur from fragmented messages
-    const processedLines = [];
-    const lines = filteredContent.split('\n');
+    return filteredContent.trim();
+  };
+
+  // Add this new function to detect duplicated content in a message
+  const removeDuplicatedContent = (text: string): string => {
+    // Split by sentences to check for duplicates
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    const uniqueSentences: string[] = [];
     
-    for (let i = 0; i < lines.length; i++) {
-      const currentLine = lines[i].trim();
-      // Skip empty lines
-      if (!currentLine) continue;
-      
-      // Check if this line appears later in the message (potential duplicate)
-      let isDuplicate = false;
-      for (let j = i + 1; j < lines.length; j++) {
-        if (lines[j].includes(currentLine) && currentLine.length > 5) {
-          isDuplicate = true;
-          break;
-        }
+    for (const sentence of sentences) {
+      // Skip very short sentences as they might be legitimate repetitions
+      if (sentence.trim().length < 5) {
+        uniqueSentences.push(sentence);
+        continue;
       }
       
+      // Check if this sentence is already included in what we've processed
+      const isDuplicate = uniqueSentences.some(existing => 
+        existing.includes(sentence) || sentence.includes(existing)
+      );
+      
       if (!isDuplicate) {
-        processedLines.push(currentLine);
+        uniqueSentences.push(sentence);
       }
     }
     
-    return processedLines.join('\n');
+    return uniqueSentences.join(' ').trim();
   };
 
   const handleSendMessage = async () => {
@@ -250,29 +252,27 @@ const ChatScreen = ({ characterId = '1' }) => {
         const reader = response.getReader();
         const decoder = new TextDecoder();
         
-        let responseText = '';
+        let completeResponseText = '';
+        let currentCleanText = '';
         let displayedText = '';
-        let animationActive = false;
-        let animationQueue = '';
+        let isAnimating = false;
         
-        const animateTyping = () => {
-          if (animationActive || !animationQueue.length) return;
+        const animateTyping = (textToAnimate: string) => {
+          if (isAnimating || textToAnimate === displayedText) return;
           
-          animationActive = true;
-          let index = 0;
+          isAnimating = true;
+          const newContent = textToAnimate.substring(displayedText.length);
+          let charIndex = 0;
           
           const typingInterval = setInterval(() => {
-            if (index < animationQueue.length) {
-              displayedText += animationQueue[index];
+            if (charIndex < newContent.length) {
+              displayedText += newContent[charIndex];
               updateMessageInState(aiPlaceholderId, displayedText);
               scrollToBottom();
-              index++;
+              charIndex++;
             } else {
               clearInterval(typingInterval);
-              animationActive = false;
-              animationQueue = '';
-              // Check if there's more text to process
-              animateTyping();
+              isAnimating = false;
             }
           }, 15); // Fast but still visible typing speed
         };
@@ -283,35 +283,36 @@ const ChatScreen = ({ characterId = '1' }) => {
           if (done) break;
           
           const chunk = decoder.decode(value, { stream: true });
-          responseText += chunk;
+          completeResponseText += chunk;
           
-          // Process the response text carefully to handle newlines and duplicates
-          const filteredText = filterSystemMessages(responseText);
+          // Filter and deduplicate the complete text we've received so far
+          const filteredText = filterSystemMessages(completeResponseText);
+          const cleanText = removeDuplicatedContent(filteredText);
           
-          // Add new content to animation queue - calculate exactly what's new
-          if (filteredText.length > displayedText.length) {
-            // Handle the case where the filtered text might be completely different due to deduplication
-            if (filteredText.startsWith(displayedText)) {
-              // Simple case - just append what's new
-              animationQueue += filteredText.substring(displayedText.length);
-            } else {
-              // The text has been significantly changed by filtering
-              // Clear what's displayed and start fresh with the correct text
-              displayedText = '';
-              animationQueue = filteredText;
-              // Need to update immediately to avoid flicker
-              updateMessageInState(aiPlaceholderId, '');
-            }
-            
-            animateTyping();
+          // Only start a new animation if we have new clean content
+          if (cleanText !== currentCleanText) {
+            currentCleanText = cleanText;
+            // Start typing animation for the new content
+            animateTyping(cleanText);
           }
         }
         
-        // Save the complete AI response to history, with system messages filtered out
-        const finalResponseText = filterSystemMessages(responseText);
+        // Final cleanup and deduplication for the complete message
+        const finalFilteredText = filterSystemMessages(completeResponseText);
+        const finalText = removeDuplicatedContent(finalFilteredText);
+        
+        // Wait for any animation in progress to finish
+        while (isAnimating) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        // Update with the final deduplicated message
+        updateMessageInState(aiPlaceholderId, finalText);
+        
+        // Save the complete AI response to history
         const finalAiMessage: Message = {
           id: aiPlaceholderId,
-          content: finalResponseText,
+          content: finalText,
           senderType: 'ai',
           senderId: characterId,
           receiverId: 'user123',
@@ -322,29 +323,27 @@ const ChatScreen = ({ characterId = '1' }) => {
       } 
       // For environments not supporting ReadableStream, use callback approach
       else if (typeof response === 'function') {
-        let responseText = '';
+        let completeResponseText = '';
+        let currentCleanText = '';
         let displayedText = '';
-        let animationActive = false;
-        let animationQueue = '';
+        let isAnimating = false;
         
-        const animateTyping = () => {
-          if (animationActive || !animationQueue.length) return;
+        const animateTyping = (textToAnimate: string) => {
+          if (isAnimating || textToAnimate === displayedText) return;
           
-          animationActive = true;
-          let index = 0;
+          isAnimating = true;
+          const newContent = textToAnimate.substring(displayedText.length);
+          let charIndex = 0;
           
           const typingInterval = setInterval(() => {
-            if (index < animationQueue.length) {
-              displayedText += animationQueue[index];
+            if (charIndex < newContent.length) {
+              displayedText += newContent[charIndex];
               updateMessageInState(aiPlaceholderId, displayedText);
               scrollToBottom();
-              index++;
+              charIndex++;
             } else {
               clearInterval(typingInterval);
-              animationActive = false;
-              animationQueue = '';
-              // Check if there's more text to process
-              animateTyping();
+              isAnimating = false;
             }
           }, 15); // Fast but still visible typing speed
         };
@@ -357,27 +356,17 @@ const ChatScreen = ({ characterId = '1' }) => {
             return;
           }
           
-          responseText += message;
+          completeResponseText += message;
           
-          // Process the response text carefully to handle newlines and duplicates
-          const filteredText = filterSystemMessages(responseText);
+          // Filter and deduplicate the complete text we've received so far
+          const filteredText = filterSystemMessages(completeResponseText);
+          const cleanText = removeDuplicatedContent(filteredText);
           
-          // Add new content to animation queue - calculate exactly what's new
-          if (filteredText.length > displayedText.length) {
-            // Handle the case where the filtered text might be completely different due to deduplication
-            if (filteredText.startsWith(displayedText)) {
-              // Simple case - just append what's new
-              animationQueue += filteredText.substring(displayedText.length);
-            } else {
-              // The text has been significantly changed by filtering
-              // Clear what's displayed and start fresh with the correct text
-              displayedText = '';
-              animationQueue = filteredText;
-              // Need to update immediately to avoid flicker
-              updateMessageInState(aiPlaceholderId, '');
-            }
-            
-            animateTyping();
+          // Only start a new animation if we have new clean content
+          if (cleanText !== currentCleanText) {
+            currentCleanText = cleanText;
+            // Start typing animation for the new content
+            animateTyping(cleanText);
           }
         });
         
@@ -520,9 +509,9 @@ const ChatScreen = ({ characterId = '1' }) => {
         <View style={styles.quickActions}>
           <ActionButton 
             icon="🆘" 
-            label="Help with cravings" 
+            label="NoContact Help" 
             color="#FFE5E5" 
-            onPress={() => handleQuickAction("I need help with cravings right now.")}
+            onPress={() => handleQuickAction("I need help with no contacting my ex right now.")}
           />
           <ActionButton 
             icon="😤" 
