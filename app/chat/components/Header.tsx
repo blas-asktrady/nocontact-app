@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useMessages } from '@/hooks/useMessages';
@@ -73,6 +73,11 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
         <Feather name="chevron-left" size={24} color="#000000" />
       </TouchableOpacity>
       
+      <View style={styles.titleContainer}>
+        <Image source={require('@/assets/images/face.png')} style={styles.faceImage} />
+        <Text style={styles.titleText}>Chat with Kufu</Text>
+      </View>
+      
       <View style={styles.iconsContainer}>
         <TouchableOpacity 
           style={styles.iconButton}
@@ -80,7 +85,6 @@ export const Header = ({ onVoiceChat, onNewChat, onChatHistory }: HeaderProps) =
         >
           <Feather name="message-circle" size={20} color="#ffff" />
         </TouchableOpacity>
-        
       </View>
     </View>
   );
@@ -92,7 +96,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
   },
   backButton: {
@@ -110,5 +114,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  faceImage: {
+    width: 24,
+    height: 24,
+    marginRight: 6,
+  },
+  titleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
   },
 });

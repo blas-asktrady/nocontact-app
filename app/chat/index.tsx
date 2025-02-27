@@ -32,6 +32,8 @@ const ChatScreen = ({ characterId = '1' }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isReceivingMessage, setIsReceivingMessage] = useState(false);
+  const [typingMessage, setTypingMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   
   // Keep reference to active WebSocket cleanup functions
@@ -40,22 +42,40 @@ const ChatScreen = ({ characterId = '1' }) => {
   // Track all message IDs to prevent duplicates
   const messageIdsRef = useRef<Set<string>>(new Set());
 
+  // Simulate typing animation for the welcome message
+  const simulateTyping = (fullMessage: string) => {
+    setIsTyping(true);
+    let index = 0;
+    const typingInterval = setInterval(() => {
+      if (index <= fullMessage.length) {
+        setTypingMessage(fullMessage.substring(0, index));
+        index++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTyping(false);
+        
+        // After typing is complete, add the message to the state
+        const welcomeMessageId = `ai-welcome-${Date.now()}`;
+        const welcomeMessage: Message = {
+          id: welcomeMessageId,
+          content: fullMessage,
+          senderType: 'ai',
+          senderId: characterId,
+          receiverId: 'user123',
+          createdAt: new Date().toISOString(),
+        };
+        
+        addMessageToState(welcomeMessage);
+      }
+    }, 25); // Increased typing speed - 25ms delay instead of 50ms
+  };
+
   // Initialize message state from local storage/context
   useEffect(() => {
     // Add initial welcome message if no messages exist
     if (messages.length === 0) {
-      const welcomeMessageId = `ai-welcome-${Date.now()}`;
-      const welcomeMessage: Message = {
-        id: welcomeMessageId,
-        content: "Hi there! 👋 How are you feeling today?",
-        senderType: 'ai',
-        senderId: characterId,
-        receiverId: 'user123',
-        createdAt: new Date().toISOString(),
-      };
-      
-      // Add welcome message to state
-      addMessageToState(welcomeMessage);
+      // Start typing animation instead of immediately adding message
+      simulateTyping("Hi there! 👋 How are you feeling today?");
     }
     
     // Initially load saved messages only if our local state is empty (except for welcome message)
@@ -143,9 +163,33 @@ const ChatScreen = ({ characterId = '1' }) => {
       return content.replace('{"type": "timeout"}', '').trim();
     }
     
-    // Add more filters for other system messages if needed
+    // Process line breaks and normalize whitespace
+    let filteredContent = content.replace(/\\n/g, '\n');
     
-    return content;
+    // Remove any potential duplicate content that might occur from fragmented messages
+    const processedLines = [];
+    const lines = filteredContent.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const currentLine = lines[i].trim();
+      // Skip empty lines
+      if (!currentLine) continue;
+      
+      // Check if this line appears later in the message (potential duplicate)
+      let isDuplicate = false;
+      for (let j = i + 1; j < lines.length; j++) {
+        if (lines[j].includes(currentLine) && currentLine.length > 5) {
+          isDuplicate = true;
+          break;
+        }
+      }
+      
+      if (!isDuplicate) {
+        processedLines.push(currentLine);
+      }
+    }
+    
+    return processedLines.join('\n');
   };
 
   const handleSendMessage = async () => {
@@ -207,6 +251,31 @@ const ChatScreen = ({ characterId = '1' }) => {
         const decoder = new TextDecoder();
         
         let responseText = '';
+        let displayedText = '';
+        let animationActive = false;
+        let animationQueue = '';
+        
+        const animateTyping = () => {
+          if (animationActive || !animationQueue.length) return;
+          
+          animationActive = true;
+          let index = 0;
+          
+          const typingInterval = setInterval(() => {
+            if (index < animationQueue.length) {
+              displayedText += animationQueue[index];
+              updateMessageInState(aiPlaceholderId, displayedText);
+              scrollToBottom();
+              index++;
+            } else {
+              clearInterval(typingInterval);
+              animationActive = false;
+              animationQueue = '';
+              // Check if there's more text to process
+              animateTyping();
+            }
+          }, 15); // Fast but still visible typing speed
+        };
         
         // Read stream chunks and update AI message
         while (true) {
@@ -216,12 +285,26 @@ const ChatScreen = ({ characterId = '1' }) => {
           const chunk = decoder.decode(value, { stream: true });
           responseText += chunk;
           
-          // Clean the response text of any system messages
+          // Process the response text carefully to handle newlines and duplicates
           const filteredText = filterSystemMessages(responseText);
           
-          // Update the AI message with new content
-          updateMessageInState(aiPlaceholderId, filteredText);
-          scrollToBottom();
+          // Add new content to animation queue - calculate exactly what's new
+          if (filteredText.length > displayedText.length) {
+            // Handle the case where the filtered text might be completely different due to deduplication
+            if (filteredText.startsWith(displayedText)) {
+              // Simple case - just append what's new
+              animationQueue += filteredText.substring(displayedText.length);
+            } else {
+              // The text has been significantly changed by filtering
+              // Clear what's displayed and start fresh with the correct text
+              displayedText = '';
+              animationQueue = filteredText;
+              // Need to update immediately to avoid flicker
+              updateMessageInState(aiPlaceholderId, '');
+            }
+            
+            animateTyping();
+          }
         }
         
         // Save the complete AI response to history, with system messages filtered out
@@ -240,6 +323,31 @@ const ChatScreen = ({ characterId = '1' }) => {
       // For environments not supporting ReadableStream, use callback approach
       else if (typeof response === 'function') {
         let responseText = '';
+        let displayedText = '';
+        let animationActive = false;
+        let animationQueue = '';
+        
+        const animateTyping = () => {
+          if (animationActive || !animationQueue.length) return;
+          
+          animationActive = true;
+          let index = 0;
+          
+          const typingInterval = setInterval(() => {
+            if (index < animationQueue.length) {
+              displayedText += animationQueue[index];
+              updateMessageInState(aiPlaceholderId, displayedText);
+              scrollToBottom();
+              index++;
+            } else {
+              clearInterval(typingInterval);
+              animationActive = false;
+              animationQueue = '';
+              // Check if there's more text to process
+              animateTyping();
+            }
+          }, 15); // Fast but still visible typing speed
+        };
         
         // Use the callback to receive messages
         const cleanup = response((message: string) => {
@@ -251,9 +359,26 @@ const ChatScreen = ({ characterId = '1' }) => {
           
           responseText += message;
           
-          // Update the AI message with new content
-          updateMessageInState(aiPlaceholderId, responseText);
-          scrollToBottom();
+          // Process the response text carefully to handle newlines and duplicates
+          const filteredText = filterSystemMessages(responseText);
+          
+          // Add new content to animation queue - calculate exactly what's new
+          if (filteredText.length > displayedText.length) {
+            // Handle the case where the filtered text might be completely different due to deduplication
+            if (filteredText.startsWith(displayedText)) {
+              // Simple case - just append what's new
+              animationQueue += filteredText.substring(displayedText.length);
+            } else {
+              // The text has been significantly changed by filtering
+              // Clear what's displayed and start fresh with the correct text
+              displayedText = '';
+              animationQueue = filteredText;
+              // Need to update immediately to avoid flicker
+              updateMessageInState(aiPlaceholderId, '');
+            }
+            
+            animateTyping();
+          }
         });
         
         // Store the cleanup function
@@ -262,7 +387,20 @@ const ChatScreen = ({ characterId = '1' }) => {
         // Handle simple string response, filtering any system messages
         const filteredResponse = filterSystemMessages(response);
         
-        updateMessageInState(aiPlaceholderId, filteredResponse);
+        // Animate the response instead of updating immediately
+        let displayedText = '';
+        let index = 0;
+        
+        const typingInterval = setInterval(() => {
+          if (index < filteredResponse.length) {
+            displayedText += filteredResponse[index];
+            updateMessageInState(aiPlaceholderId, displayedText);
+            scrollToBottom();
+            index++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 15);
         
         // Save the AI response to history
         const finalAiMessage: Message = {
@@ -313,11 +451,14 @@ const ChatScreen = ({ characterId = '1' }) => {
         isUserMessage && styles.userMessageRow
       ]}>
         {!isUserMessage && (
-          <Image 
-            source={require('@/assets/images/face.png')} 
-            style={styles.avatar}
-            defaultSource={require('@/assets/images/face.png')}
-          />
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={require('@/assets/images/face.png')} 
+              style={styles.avatar}
+              defaultSource={require('@/assets/images/face.png')}
+              resizeMode="contain"
+            />
+          </View>
         )}
         <View style={[
           styles.messageBubble,
@@ -355,6 +496,21 @@ const ChatScreen = ({ characterId = '1' }) => {
             minIndexForVisible: 0,
             autoscrollToTopThreshold: 10,
           }}
+          ListHeaderComponent={isTyping ? (
+            <View style={styles.messageRow}>
+              <View style={styles.avatarContainer}>
+                <Image 
+                  source={require('@/assets/images/face.png')} 
+                  style={styles.avatar}
+                  defaultSource={require('@/assets/images/face.png')}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.messageBubble}>
+                <Text style={styles.messageText}>{typingMessage}</Text>
+              </View>
+            </View>
+          ) : null}
         />
       </View>
 
@@ -422,15 +578,18 @@ const ChatScreen = ({ characterId = '1' }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Changed from purple to white to match journal
+    backgroundColor: '#FFFFFF',
   },
   chatContainer: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#FFFFFF', // Changed to white to match journal
+    paddingBottom: 0,
+    backgroundColor: '#FFFFFF',
   },
   chatContentContainer: {
     flexGrow: 1,
+    paddingBottom: 0,
+    marginBottom: 0,
   },
   messageRow: {
     flexDirection: 'row',
@@ -440,15 +599,26 @@ const styles = StyleSheet.create({
   userMessageRow: {
     flexDirection: 'row-reverse',
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  avatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6a77e3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
     marginRight: 12,
   },
+  avatar: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#6a77e3',
+  },
   messageBubble: {
-    backgroundColor: '#ECEEF8', // Changed to light blue/gray from journal
+    backgroundColor: '#ECEEF8',
     padding: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
     borderRadius: 20,
     maxWidth: '80%',
     borderWidth: 0,
@@ -459,23 +629,23 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   userMessageBubble: {
-    backgroundColor: '#4B69FF', // Changed to match journal button color
+    backgroundColor: '#4B69FF',
     marginRight: 12,
     borderWidth: 0,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    color: '#666', // Changed to match journal text color
+    color: '#666',
   },
   userMessageText: {
-    color: '#FFFFFF', // White text for user messages
+    color: '#FFFFFF',
   },
   bottomSection: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#ECEEF8', // Changed to light blue/gray from journal
-    backgroundColor: '#FFFFFF', // Changed to white to match journal
+    borderTopColor: '#ECEEF8',
+    backgroundColor: '#FFFFFF',
   },
   quickActions: {
     flexDirection: 'row',
@@ -509,7 +679,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#F0F2F5', // Lighter gray as shown in screenshot
+    backgroundColor: '#F0F2F5',
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -520,13 +690,13 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#6a77e3', // Light gray for send button background
+    backgroundColor: '#6a77e3',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: 'rgba(170, 175, 186, 0.5)', // Semi-transparent white for disabled state
+    backgroundColor: 'rgba(170, 175, 186, 0.5)',
   },
 });
 
