@@ -10,6 +10,9 @@ import GoogleLogo from '@/components/ui/GoogleLogo';
 
 const { height } = Dimensions.get('window');
 
+// Import the LoadingScreen component
+import LoadingScreen from '@/components/LoadingScreen'; // Adjust the import path as needed
+
 export default function HomeScreen() {
   const { user, signInWithApple, signInWithGoogle } = useUser();
   const slideAnim = useRef(new Animated.Value(height)).current;
@@ -23,6 +26,44 @@ export default function HomeScreen() {
     }).start();
   }, [user]);
   
+  // State to track when we're handling a redirect with a token
+  const [handlingRedirect, setHandlingRedirect] = useState(false);
+
+  // Add a new useEffect to handle the hash fragment in the URL
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      // Check if there's an access token in the URL hash
+      const hashParams = window.location.hash.substring(1);
+      if (hashParams.includes('access_token=')) {
+        // Show loading screen immediately
+        setHandlingRedirect(true);
+        
+        // Parse the access token from the URL
+        const params = new URLSearchParams(hashParams);
+        const accessToken = params.get('access_token');
+        
+        if (accessToken) {
+          console.log('Access token found in URL, handling sign-in');
+          // Process the token - this will depend on your useUser implementation
+          
+          // Clear the hash from the URL without reloading the page
+          window.history.replaceState(null, '', window.location.pathname);
+          
+          // Option 1: If your useUser hook has a method to process tokens directly:
+          // processAuthToken(accessToken).then(() => {
+          //   // After successful token processing, route to appropriate screen
+          //   router.push('/dashboard');
+          // });
+          
+          // Option 2: If you need to force reload:
+          setTimeout(() => {
+            window.location.reload();
+          }, 500); // Small delay to ensure the loading screen appears
+        }
+      }
+    }
+  }, []);
+  
   const handleGetStarted = () => {
     router.push('/survey');
   };
@@ -30,6 +71,8 @@ export default function HomeScreen() {
   const handleGoogleSignIn = async () => {
     try {
       setIsAuthenticating(true);
+      setHandlingRedirect(true); // Show loading screen immediately
+      
       // Use the signInWithGoogle method from useUser, which now properly handles redirects
       await signInWithGoogle();
       
@@ -38,13 +81,18 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error with Google sign in:', error);
       setIsAuthenticating(false);
+      setHandlingRedirect(false); // Hide loading screen on error
     }
-    // Don't use finally block as the page will redirect and reload
   };
 
   // Check if the app is running in a web browser
   const isRunningInBrowser = Platform.OS === 'web';
 
+  // Render the loading screen if handling a redirect
+  if (handlingRedirect) {
+    return <LoadingScreen/>;
+  }
+  
   return (
     <ThemedView style={styles.container}>
       {/* Background Image with Gradient Overlay */}

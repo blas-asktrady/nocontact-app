@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Image, View, Text, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft, Bell } from 'lucide-react';
@@ -10,8 +10,8 @@ import {
   updatePrimaryGoal,
   updateWantTips,
   updateIsSurveyCompleted
-} from '@/services/surveyService'; // Import the survey service functions
-import { useUser } from '@/hooks/useUser'; // Add this import
+} from '@/services/surveyService';
+import { useUser } from '@/hooks/useUser';
 
 const SupportIcon = () => (
   <View style={styles.buddyCircle}>
@@ -34,16 +34,61 @@ const SurveyScreen = () => {
 
   const [step, setStep] = useState(1);
   const [showPicker, setShowPicker] = useState(false);
-  const { user, isLoading, signOut } = useUser(); // Get user and isLoading from useUser hook
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const { user, isLoading, signOut } = useUser();
+  
+  // Add ref to store current user ID to prevent stale values
+  const userIdRef = useRef(null);
+  
+  // When user changes, update the ref
+  useEffect(() => {
+    if (user?.id) {
+      userIdRef.current = user.id;
+      console.log('Updated userIdRef:', userIdRef.current);
+    }
+  }, [user]);
+  
+  useEffect(() => {
+    console.log('survey user:', user);
+  }, [user]);
 
-  const handleDateChange = (event: any, selectedDate: any) => {
+  const handleDateChange = async (event: any, selectedDate: any) => {
     setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
+      setIsProcessing(true);
+      setError('');
+      
       const newDate = selectedDate.toISOString();
       setAnswers({ ...answers, lastEpisodeDate: newDate });
-      // Update the lastEpisodeDate in the database
-      if (user?.id) {
-        updateLastEpisodeDate(user.id, newDate);
+      
+      // Use the ref instead of the user object directly
+      const currentUserId = userIdRef.current;
+      
+      if (currentUserId) {
+        try {
+          // Set a timeout to prevent UI from getting stuck
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out')), 8000)
+          );
+          
+          // Race the actual API call against the timeout
+          await Promise.race([
+            updateLastEpisodeDate(currentUserId, newDate),
+            timeoutPromise
+          ]);
+          
+          console.log('Last episode date updated successfully');
+        } catch (err) {
+          console.error('Failed to update last episode date:', err);
+          setError(err.message || 'Failed to save date. Please try again.');
+        } finally {
+          setIsProcessing(false);
+        }
+      } else {
+        console.error('No user ID available for update');
+        setError('Authentication error. Please try again.');
+        setIsProcessing(false);
       }
     }
   };
@@ -79,32 +124,81 @@ const SurveyScreen = () => {
     }
   };
 
-  const handleNext = () => {
-    if (step < 5 && hasAnswerForCurrentStep()) {
-      // Save the current step's answer to the database
-      saveCurrentStepAnswer();
-      setStep(step + 1);
+  // Save current step's answer to the database
+  const saveCurrentStepAnswer = async () => {
+    console.log('Saving answer for step:', step);
+    
+    // Use the ref instead of accessing user.id directly
+    const currentUserId = userIdRef.current;
+    console.log('Current userId from ref:', currentUserId);
+    
+    if (!currentUserId) {
+      console.error('No user ID available for update');
+      setError('Your session may have expired. Please refresh the page.');
+      return false;
+    }
+    
+    try {
+      // Set a timeout to prevent UI from getting stuck
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 8000)
+      );
+      
+      // Use local copies of data to avoid closure issues
+      const currentStepData = { ...answers };
+      
+      let apiCall;
+      switch (step) {
+        case 1:
+          console.log('updateUsername', currentUserId, currentStepData.name);
+          apiCall = updateUsername(currentUserId, currentStepData.name);
+          break;
+        case 2:
+          console.log('updateDepressionDuration', currentUserId, currentStepData.depressionDuration);
+          apiCall = updateDepressionDuration(currentUserId, currentStepData.depressionDuration);
+          break;
+        case 3:
+          // Already handled in handleDateChange
+          return true;
+        case 4:
+          console.log('updatePrimaryGoal', currentUserId, currentStepData.primaryGoal);
+          apiCall = updatePrimaryGoal(currentUserId, currentStepData.primaryGoal);
+          break;
+        default:
+          return false;
+      }
+      
+      // Race the actual API call against the timeout
+      await Promise.race([apiCall, timeoutPromise]);
+      
+      console.log(`Step ${step} data saved successfully`);
+      return true;
+    } catch (err) {
+      console.error('Error saving step answer:', err);
+      setError(err.message || 'Failed to save your answer. Please try again.');
+      return false;
     }
   };
 
-  // Save current step's answer to the database
-  const saveCurrentStepAnswer = () => {
-    console.log('Saving answer for step:', user?.id);
-    if (!user?.id) return; // Add a guard clause
-    
-    switch (step) {
-      case 1:
-        updateUsername(user.id, answers.name);
-        break;
-      case 2:
-        updateDepressionDuration(user.id, answers.depressionDuration);
-        break;
-      case 3:
-        // Already handled in handleDateChange
-        break;
-      case 4:
-        updatePrimaryGoal(user.id, answers.primaryGoal);
-        break;
+  const handleNext = async () => {
+    if (step < 5 && hasAnswerForCurrentStep() && !isProcessing) {
+      setIsProcessing(true);
+      setError('');
+      
+      try {
+        // Save the current step's answer to the database
+        const saveSuccess = await saveCurrentStepAnswer();
+        
+        // Only proceed to next step if save was successful
+        if (saveSuccess) {
+          setStep(step + 1);
+        }
+      } catch (err) {
+        console.error('Failed to proceed to next step:', err);
+        setError('An unexpected error occurred. Please try again.');
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -134,19 +228,49 @@ const SurveyScreen = () => {
     }
   };
 
-  const handleChoiceAndNavigate = (choice: boolean) => {
-    setAnswers({ ...answers, wantsTips: choice });
+  const handleChoiceAndNavigate = async (choice: boolean) => {
+    // Use the ref instead of accessing user.id directly
+    const currentUserId = userIdRef.current;
     
-    if (user?.id) {
-      // Update want tips preference
-      updateWantTips(user.id, choice);
-      
-      // Mark the survey as completed regardless of choice
-      updateIsSurveyCompleted(user.id, true);
+    if (!currentUserId) {
+      console.error('No user ID available for final update');
+      router.replace('/tabs/home');
+      return;
     }
     
-    // Navigate to tabs/home
-    router.replace('/tabs/home');
+    setIsProcessing(true);
+    setError('');
+    setAnswers({ ...answers, wantsTips: choice });
+    
+    // Set a timeout that will navigate regardless
+    const navigationTimeout = setTimeout(() => {
+      console.log('Final step timed out, navigating anyway');
+      router.replace('/tabs/home');
+    }, 8000);
+    
+    try {
+      // Use Promise.all to run both operations concurrently
+      await Promise.all([
+        updateWantTips(currentUserId, choice),
+        updateIsSurveyCompleted(currentUserId, true)
+      ]);
+      
+      clearTimeout(navigationTimeout);
+      console.log('Preferences saved successfully');
+      
+      // Only navigate after DB operations complete
+      router.replace('/tabs/home');
+    } catch (err) {
+      console.error('Failed to save preferences:', err);
+      clearTimeout(navigationTimeout);
+      
+      setError('Failed to save preferences. Continuing anyway.');
+      
+      // Navigate even if there was an error, after a short delay so the error can be seen
+      setTimeout(() => {
+        router.replace('/tabs/home');
+      }, 1500);
+    }
   };
 
   const renderStep1 = () => (
@@ -207,6 +331,7 @@ const SurveyScreen = () => {
       <TouchableOpacity 
         style={styles.dateButton}
         onPress={() => setShowPicker(true)}
+        disabled={isProcessing}
       >
         <Text style={styles.dateButtonText}>Pick date</Text>
       </TouchableOpacity>
@@ -242,6 +367,7 @@ const SurveyScreen = () => {
             key={goal}
             style={[styles.goalButton, answers.primaryGoal === goal && styles.selectedButton]}
             onPress={() => setAnswers({ ...answers, primaryGoal: goal })}
+            disabled={isProcessing}
           >
             <Text style={styles.goalText}>{goal}</Text>
           </TouchableOpacity>
@@ -267,12 +393,14 @@ const SurveyScreen = () => {
         <TouchableOpacity 
           style={[styles.choiceButton]}
           onPress={() => handleChoiceAndNavigate(false)}
+          disabled={isProcessing}
         >
           <Text style={styles.choiceButtonText}>Not now</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.choiceButton, styles.primaryButton]}
           onPress={() => handleChoiceAndNavigate(true)}
+          disabled={isProcessing}
         >
           <Text style={styles.primaryButtonText}>Yes, please</Text>
         </TouchableOpacity>
@@ -302,23 +430,28 @@ const SurveyScreen = () => {
     
     return (
       <View style={styles.footer}>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <TouchableOpacity 
           style={styles.skipButton}
           onPress={handleSkip}
+          disabled={isProcessing}
         >
           <Text style={styles.skipButtonText}>Skip</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[
             styles.nextButton,
-            !hasAnswerForCurrentStep() && styles.nextButtonDisabled
+            (!hasAnswerForCurrentStep() || isProcessing) && styles.nextButtonDisabled
           ]}
-          onPress={hasAnswerForCurrentStep() ? handleNext : null}
+          onPress={hasAnswerForCurrentStep() && !isProcessing ? handleNext : null}
+          disabled={!hasAnswerForCurrentStep() || isProcessing}
         >
           <Text style={[
             styles.nextButtonText,
-            !hasAnswerForCurrentStep() && styles.nextButtonTextDisabled
-          ]}>Next</Text>
+            (!hasAnswerForCurrentStep() || isProcessing) && styles.nextButtonTextDisabled
+          ]}>
+            {isProcessing ? 'Saving...' : 'Next'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -328,7 +461,7 @@ const SurveyScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton} disabled={isProcessing}>
             <ChevronLeft size={24} color="#000000" />
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
@@ -529,6 +662,12 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 14,
+    flex: 1,
+    marginRight: 8,
   },
 });
 

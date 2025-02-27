@@ -7,7 +7,6 @@ type UserSettings = Tables<'user_settings'>
 
 export async function updateUsername(userId: string, username: string) {
   try {
-    console.log('updateUsername', userId, username)
     const userData: Partial<User> = { username }
     await supabase.from('users').update(userData).eq('id', userId)
   } catch (error) {
@@ -16,7 +15,6 @@ export async function updateUsername(userId: string, username: string) {
 }
 
 export async function updateDepressionDuration(userId: string, depressionDuration: string) {
-  console.log('updateDepressionDuration2', userId, depressionDuration)
   try {
     const surveyData: Partial<Survey> = { depression_duration: depressionDuration }
     const { data, error } = await supabase.from('surveys').update(surveyData).eq('user_id', userId)
