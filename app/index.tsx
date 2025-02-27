@@ -94,23 +94,14 @@ export default function HomeScreen() {
 
           {/* Button area fixed at bottom */}
           <ThemedView style={styles.buttons}>
+            {/* Always show Apple Sign-in button */}
             <ThemedView 
-              style={styles.primaryButton}
-              onTouchEnd={handleGetStarted}
+              style={styles.appleButton}
+              onTouchEnd={signInWithApple}
             >
-              <ThemedText style={styles.primaryButtonText}>Skip Sign In</ThemedText>
+              <AppleIcon name="apple1" size={18} color="#FFFFFF" style={styles.appleIcon} />
+              <ThemedText style={styles.appleButtonText}>Sign in with Apple</ThemedText>
             </ThemedView>
-            
-            {/* Show Apple Sign-in button only on iOS */}
-            {!isRunningInBrowser && (
-              <ThemedView 
-                style={styles.appleButton}
-                onTouchEnd={signInWithApple}
-              >
-                <AppleIcon name="apple1" size={18} color="#FFFFFF" style={styles.appleIcon} />
-                <ThemedText style={styles.appleButtonText}>Sign in with Apple</ThemedText>
-              </ThemedView>
-            )}
             
             {/* Show Google Sign-in button only in browser */}
             {isRunningInBrowser && (
@@ -127,6 +118,7 @@ export default function HomeScreen() {
                 </ThemedText>
               </ThemedView>
             )}
+
           </ThemedView>
         </ThemedView>
       </Animated.View>
@@ -241,18 +233,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     marginBottom: 8, // Add a small margin to prevent buttons from being too close to bottom edge
   },
-  primaryButton: {
-    backgroundColor: '#6a77e3',
-    borderRadius: 30,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '600',
-  },
   appleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -295,5 +275,18 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  skipButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 30,
+    padding: 14,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  skipButtonText: {
+    color: '#6a77e3',
+    fontSize: 17,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

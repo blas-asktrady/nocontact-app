@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Image, View, Text, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Bell } from 'lucide-react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   updateUsername, 
@@ -14,10 +14,12 @@ import {
 import { useUser } from '@/hooks/useUser'; // Add this import
 
 const SupportIcon = () => (
-  <Image
-    source={require('@/assets/images/react-logo.png')}
-    style={styles.supportIcon}
-  />
+  <View style={styles.buddyCircle}>
+    <Image
+      source={require('@/assets/mascot/face.png')}
+      style={styles.buddyImage}
+    />
+  </View>
 );
 
 const SurveyScreen = () => {
@@ -66,7 +68,7 @@ const SurveyScreen = () => {
 
   const handleBack = () => {
     if (step === 1) {
-      router.back();
+      router.replace('/');
     } else {
       setStep(step - 1);
     }
@@ -146,7 +148,7 @@ const SurveyScreen = () => {
       <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Hi! I'm NoContact Panda, your panda buddy. I'm here to help you create a healthier lifestyle. What's your name?
+          Hi! I'm NoContact Panda, your panda buddy. I'm here to help you go through your breakup. What's your name?
         </Text>
       </View>
       <TextInput
@@ -164,7 +166,7 @@ const SurveyScreen = () => {
       <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          How long have you been experiencing depression?
+          How long was your relationship?
         </Text>
       </View>
       {[
@@ -194,7 +196,7 @@ const SurveyScreen = () => {
     <View style={styles.stepContainer}>
       <SupportIcon />
       <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>When did your most recent depressive episode begin?</Text>
+        <Text style={styles.messageText}>When did you break up with your ex?</Text>
       </View>
       <TouchableOpacity 
         style={styles.dateButton}
@@ -250,10 +252,11 @@ const SurveyScreen = () => {
           Would you like to receive daily mental wellness tips?
         </Text>
       </View>
-      <Image
-        source={require('@/assets/images/react-logo.png')}
-        style={styles.notificationPreview}
-      />
+      <View style={styles.notificationPreviewContainer}>
+        <Text style={[styles.notificationPreview, { fontSize: 96 }]}>
+          🧘
+        </Text>
+      </View>
       <View style={styles.choiceContainer}>
         <TouchableOpacity 
           style={[styles.choiceButton]}
@@ -364,27 +367,36 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6a77e3',
     borderRadius: 2,
   },
   stepContainer: {
     flex: 1,
     padding: 24,
   },
-  supportIcon: {
-    width: 48,
-    height: 48,
+  buddyCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#6a77e3',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  buddyImage: {
+    width: '75%',
+    height: '75%',
   },
   messageContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#6a77e3',
     borderRadius: 20,
     padding: 20,
     marginBottom: 24,
   },
   messageText: {
     fontSize: 24,
-    color: '#1F2937',
+    color: '#FFFFFF',
     lineHeight: 32,
   },
   input: {
@@ -406,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   selectedButton: {
-    borderColor: '#4F46E5',
+    borderColor: '#6a77e3',
     backgroundColor: '#EEF2FF',
   },
   durationText: {
@@ -414,7 +426,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   dateButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6a77e3',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -443,11 +455,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
-  notificationPreview: {
+  notificationPreviewContainer: {
     width: '100%',
     height: 200,
-    resizeMode: 'contain',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 24,
+  },
+  notificationPreview: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    lineHeight: 32,
   },
   choiceContainer: {
     flexDirection: 'row',
@@ -483,7 +501,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   nextButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6a77e3',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 100,
@@ -500,7 +518,7 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6a77e3',
   },
   primaryButtonText: {
     color: '#FFFFFF',
