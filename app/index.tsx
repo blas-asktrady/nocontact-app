@@ -90,7 +90,7 @@ export default function HomeScreen() {
           {/* Main content area */}
           <ThemedView style={styles.mainContent}>
             <ThemedView style={styles.header}>
-              <ThemedText style={styles.title}>Meet your new{'\n'}buddy, Kufu</ThemedText>
+              <ThemedText style={styles.title}>Meet your new{'\n'}buddy, NoContact Panda</ThemedText>
               <ThemedView style={styles.buddyCircle}>
                 <ThemedText style={styles.buddyEmoji}>🐼</ThemedText>
               </ThemedView>

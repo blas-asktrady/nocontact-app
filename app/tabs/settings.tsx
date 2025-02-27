@@ -36,9 +36,9 @@ const SettingsScreen = () => {
       {/* Share Card */}
       <View style={styles.shareCard}>
         <View style={styles.shareContent}>
-          <Text style={styles.shareTitle}>Share Kufu Panda with a friend</Text>
+          <Text style={styles.shareTitle}>Share NoContact Panda with a friend</Text>
           <Text style={styles.shareDescription}>
-            Know someone who could benefit from Kufu Panda? Tap to share the app.
+            Know someone who could benefit from NoContact Panda? Tap to share the app.
           </Text>
         </View>
         <TouchableOpacity style={styles.shareButton}>

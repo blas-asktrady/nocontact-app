@@ -162,7 +162,7 @@ const SurveyScreen = () => {
       <SupportIcon />
       <View style={styles.messageContainer}>
         <Text style={styles.messageText}>
-          Hi! I'm Kufu, your panda buddy. I'm here to help you create a healthier lifestyle. What's your name?
+          Hi! I'm NoContact Panda, your panda buddy. I'm here to help you create a healthier lifestyle. What's your name?
         </Text>
       </View>
       <TextInput
