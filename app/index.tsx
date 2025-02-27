@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Animated, Dimensions } from 'react-native';
+import { StyleSheet, Platform, Animated, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '@/hooks/useUser';
 import { ThemedText } from '@/components/ThemedText';
@@ -50,8 +50,13 @@ export default function HomeScreen() {
       {/* Background Image with Gradient Overlay */}
       <ThemedView style={styles.backgroundContainer}>
         <ThemedView style={styles.imageContainer}>
+          <Image 
+            source={require('@/assets/mascot/panda.png')} 
+            style={styles.backgroundImage}
+            resizeMode="contain"
+          />
           <LinearGradient
-            colors={['rgba(88, 86, 214, 0.8)', 'rgba(255, 100, 130, 0.8)']}
+            colors={['rgba(98, 95, 255, 0.8)', 'rgba(26, 135, 219, 0.8)']}
             style={styles.gradient}
           />
         </ThemedView>
@@ -70,16 +75,20 @@ export default function HomeScreen() {
           {/* Main content area */}
           <ThemedView style={styles.mainContent}>
             <ThemedView style={styles.header}>
-              <ThemedText style={styles.title}>Meet your new{'\n'}buddy, NoContact Panda</ThemedText>
+              <ThemedText style={styles.title}>Meet your new buddy,{'\n'}NoContact Panda</ThemedText>
               <ThemedView style={styles.buddyCircle}>
-                <ThemedText style={styles.buddyEmoji}>🐼</ThemedText>
+                <Image 
+                  source={require('@/assets/mascot/face.png')} 
+                  style={styles.buddyImage}
+                  resizeMode="contain"
+                />
               </ThemedView>
               <ThemedText style={styles.subtitle}>Feel better every day</ThemedText>
             </ThemedView>
 
             <ThemedView style={styles.stats}>
               <ThemedText style={styles.ratingText}>⭐️⭐️⭐️⭐️⭐️</ThemedText>
-              <ThemedText style={styles.achievementText}>Helped 3M+ people feel happier</ThemedText>
+              <ThemedText style={styles.achievementText}>Helped 100+ people feel happier</ThemedText>
             </ThemedView>
           </ThemedView>
 
@@ -126,7 +135,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Styles remain the same as in your original file
   container: {
     flex: 1,
   },
@@ -137,8 +145,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '80%',
+    height: '40%',
+    top: '10%',
+    left: '10%',
+    opacity: 0.9,
+    position: 'absolute',
+    zIndex: 1,
+  },
   gradient: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   contentCard: {
     position: 'absolute',
@@ -182,16 +201,18 @@ const styles = StyleSheet.create({
     lineHeight: 34,
   },
   buddyCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#6a77e3',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    overflow: 'hidden',
   },
-  buddyEmoji: {
-    fontSize: 28,
+  buddyImage: {
+    width: '75%',
+    height: '75%',
   },
   subtitle: {
     fontSize: 18,
@@ -221,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: 8, // Add a small margin to prevent buttons from being too close to bottom edge
   },
   primaryButton: {
-    backgroundColor: '#4169E1',
+    backgroundColor: '#6a77e3',
     borderRadius: 30,
     padding: 14,
     alignItems: 'center',
