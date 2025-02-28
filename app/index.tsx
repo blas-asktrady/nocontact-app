@@ -151,22 +151,19 @@ export default function HomeScreen() {
               <ThemedText style={styles.appleButtonText}>Sign in with Apple</ThemedText>
             </ThemedView>
             
-            {/* Show Google Sign-in button only in browser */}
-            {isRunningInBrowser && (
-              <ThemedView 
-                style={[
-                  styles.googleButton,
-                  isAuthenticating && styles.disabledButton
-                ]}
-                onTouchEnd={() => isAuthenticating ? undefined : handleGoogleSignIn()}
-              >
-                <GoogleLogo size={20} />
-                <ThemedText style={styles.googleButtonText}>
-                  {isAuthenticating ? 'Signing in...' : 'Sign in with Google'}
-                </ThemedText>
-              </ThemedView>
-            )}
-
+            {/* Show Google Sign-in button on all platforms */}
+            <ThemedView 
+              style={[
+                styles.googleButton,
+                isAuthenticating && styles.disabledButton
+              ]}
+              onTouchEnd={() => isAuthenticating ? undefined : handleGoogleSignIn()}
+            >
+              <GoogleLogo size={20} />
+              <ThemedText style={styles.googleButtonText}>
+                {isAuthenticating ? 'Signing in...' : 'Sign in with Google'}
+              </ThemedText>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
       </Animated.View>
