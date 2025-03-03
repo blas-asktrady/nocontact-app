@@ -1,19 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import supabase from '@/libs/supabase';
-import * as WebBrowser from 'expo-web-browser';
 import { getUserById } from '@/services/userService';
 import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
-import { makeRedirectUri } from 'expo-auth-session';
-
-// Log the redirect URI to see what it is
-const redirectUri = makeRedirectUri();
-console.log("Redirect URI:", redirectUri);
-
-// Register WebBrowser for handling redirects
-WebBrowser.maybeCompleteAuthSession();
 
 interface User {
   id: string;
@@ -25,8 +15,9 @@ interface User {
 interface UserContextType {
   user: User | null;
   isLoading: boolean;
-  signInWithApple: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
+  resetPassword: (email: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -38,9 +29,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize and set up auth right away
   useEffect(() => {
-    // Register WebBrowser handler early to catch returning OAuth requests
-    WebBrowser.maybeCompleteAuthSession();
-    
     // Run once on component mount
     const setupAuth = async () => {
       try {
@@ -127,309 +115,96 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signInWithApple = async () => {
+  const signInWithEmail = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Starting Apple sign-in process...');
+      console.log('Starting email sign-in process...');
       
-      // Different approach for web vs native
-      if (Platform.OS === 'web') {
-        // Web environment - use origin for the redirect
-        const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        console.log('Web redirect URL for Apple auth:', redirectUrl);
-        
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: redirectUrl,
-            scopes: 'name email',
-          }
-        });
-        
-        if (error) throw error;
-        
-        // For web, Supabase handles the redirect automatically
-        console.log('Redirecting to Apple authentication (web)...');
-      } else {
-        // For development in Expo Go
-        console.log('Opening Apple auth in Expo environment');
-        
-        // Make sure WebBrowser is ready to handle the return redirect
-        WebBrowser.maybeCompleteAuthSession();
-        
-        // Set up the redirect URL with a proper scheme
-        // Use a URL that will work with Expo Go and standalone builds
-        const redirectUrl = Linking.createURL('/', {
-          scheme: 'myapp' // Replace with your app's scheme from app.json
-        });
-        console.log('Using redirect URL:', redirectUrl);
-        
-        // Get the OAuth URL from Supabase
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: redirectUrl,
-            scopes: 'name email',
-          }
-        });
-        
-        if (error) throw error;
-        
-        if (data?.url) {
-          console.log('Opening OAuth URL in browser:', data.url);
-          
-          try {
-            // Open URL in browser - this will trigger the OAuth flow
-            const result = await WebBrowser.openAuthSessionAsync(
-              data.url,
-              redirectUrl
-            );
-            
-            console.log('Auth session result:', result);
-            
-            // Check if the authentication was canceled
-            if (result.type === 'cancel') {
-              console.log('User canceled the authentication flow');
-              setIsLoading(false);
-              return;
-            }
-            
-            // If we have a success URL but the auth state change listener hasn't fired yet,
-            // we can manually check for a session after a short delay
-            if (result.type === 'success') {
-              console.log('Authentication successful, checking session...');
-              
-              // Give Supabase a moment to process the authentication
-              setTimeout(async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                  console.log('Session found after redirect');
-                  await fetchAndSetUserProfile(session.user.id);
-                } else {
-                  console.log('No session found after successful redirect');
-                  setIsLoading(false);
-                }
-              }, 1000);
-            }
-          } catch (browserError: any) {
-            console.error('Browser authentication error:', browserError);
-            
-            // If WebBrowser fails, try opening in system browser as fallback
-            if (Platform.OS !== 'web') {
-              console.log('Attempting fallback to system browser');
-              await Linking.openURL(data.url);
-              
-              // Since we can't easily track the result with system browser,
-              // we'll need to rely on the auth state change listener
-              // and just reset loading state after a timeout
-              setTimeout(() => {
-                setIsLoading(false);
-              }, 5000);
-            } else {
-              setIsLoading(false);
-            }
-          }
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error('Email sign-in error:', error);
+        setIsLoading(false);
+        return { error };
       }
-    } catch (error: any) {
-      if (error?.code === 'ERR_CANCELED') {
-        console.log('User cancelled Apple authentication');
-      } else {
-        console.error('Apple authentication failed:', error);
-      }
+      
+      console.log('Email sign-in successful');
+      
+      // The auth state change listener should handle setting the user
+      return { error: null };
+    } catch (error) {
+      console.error('Email sign-in failed:', error);
       setIsLoading(false);
+      return { error };
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signUpWithEmail = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Starting Google sign-in process...');
+      console.log('Starting email sign-up process...');
       
-      // Different approach for web vs native
-      if (Platform.OS === 'web') {
-        // Web environment - use origin for the redirect
-        const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        console.log('Web redirect URL for Google auth:', redirectUrl);
-        
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              prompt: 'select_account',
-              access_type: 'offline'
-            }
-          }
-        });
-        
-        if (error) throw error;
-        
-        // For web, Supabase handles the redirect automatically
-        console.log('Redirecting to Google authentication (web)...');
-      } else {
-        // For development in Expo Go
-        console.log('Opening Google auth in Expo environment');
-        
-        // Make sure WebBrowser is ready to handle the return redirect
-        WebBrowser.maybeCompleteAuthSession();
-        
-        // Set up the redirect URL with a proper scheme
-        // Use a URL that will work with Expo Go and standalone builds
-        const redirectUrl = Linking.createURL('/', {
-          scheme: 'myapp' // Replace with your app's scheme from app.json
-        });
-        console.log('Using redirect URL:', redirectUrl);
-        
-        // Get the OAuth URL from Supabase
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              prompt: 'select_account'
-            }
-          }
-        });
-        
-        if (error) throw error;
-        
-        if (data?.url) {
-          console.log('Opening OAuth URL in browser:', data.url);
-          
-          try {
-            // Open URL in browser - this will trigger the OAuth flow
-            const result = await WebBrowser.openAuthSessionAsync(
-              data.url,
-              redirectUrl
-            );
-            
-            console.log('Auth session result:', result);
-            
-            // Check if the authentication was canceled
-            if (result.type === 'cancel') {
-              console.log('User canceled the authentication flow');
-              setIsLoading(false);
-              return;
-            }
-            
-            // If we have a success URL but the auth state change listener hasn't fired yet,
-            // we can manually check for a session after a short delay
-            if (result.type === 'success') {
-              console.log('Authentication successful, checking session...');
-              
-              // Extract the access token from the URL
-              const url = new URL(result.url);
-              const fragment = url.hash.substring(1);
-              const params = new URLSearchParams(fragment);
-              const accessToken = params.get('access_token');
-              const refreshToken = params.get('refresh_token') || '';
-              
-              if (accessToken) {
-                console.log('Access token found, setting session manually');
-                try {
-                  // Set the session using the token
-                  const { data, error } = await supabase.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                  });
-                  
-                  if (error) {
-                    console.error('Error setting session:', error);
-                    setIsLoading(false);
-                    return;
-                  }
-                  
-                  if (data.session) {
-                    console.log('Session set successfully:', data.session.user.id);
-                    
-                    // Fetch user profile
-                    try {
-                      await fetchAndSetUserProfile(data.session.user.id);
-                      console.log('User profile fetched and set');
-                      
-                      // Force reset loading state
-                      setIsLoading(false);
-                      
-                      // Force navigation after a delay
-                      console.log('Navigating to survey page...');
-                      setTimeout(() => {
-                        router.push('/survey');
-                      }, 500);
-                    } catch (profileError) {
-                      console.error('Error fetching user profile:', profileError);
-                      setIsLoading(false);
-                    }
-                  } else {
-                    console.log('No session after setSession');
-                    setIsLoading(false);
-                  }
-                } catch (sessionError) {
-                  console.error('Error setting session:', sessionError);
-                  setIsLoading(false);
-                }
-              } else {
-                console.log('No access token found in URL, checking for session directly');
-                // Give Supabase a moment to process the authentication
-                setTimeout(async () => {
-                  try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session) {
-                      console.log('Session found after redirect');
-                      await fetchAndSetUserProfile(session.user.id);
-                      
-                      // Force reset loading state
-                      setIsLoading(false);
-                      
-                      // Force navigation after a delay
-                      console.log('Navigating to survey page...');
-                      setTimeout(() => {
-                        router.push('/survey');
-                      }, 500);
-                    } else {
-                      console.log('No session found after successful redirect');
-                      setIsLoading(false);
-                    }
-                  } catch (sessionCheckError) {
-                    console.error('Error checking session:', sessionCheckError);
-                    setIsLoading(false);
-                  }
-                }, 1000);
-              }
-            } else {
-              console.log('Authentication result not successful:', result.type);
-              setIsLoading(false);
-            }
-          } catch (browserError: any) {
-            console.error('Browser authentication error:', browserError);
-            setIsLoading(false);
-            
-            // If WebBrowser fails, try opening in system browser as fallback
-            if (Platform.OS !== 'web') {
-              console.log('Attempting fallback to system browser');
-              try {
-                await Linking.openURL(data.url);
-                
-                // Since we can't easily track the result with system browser,
-                // we'll need to rely on the auth state change listener
-                // and just reset loading state after a timeout
-                setTimeout(() => {
-                  setIsLoading(false);
-                }, 5000);
-              } catch (linkingError) {
-                console.error('Error opening URL with Linking:', linkingError);
-                setIsLoading(false);
-              }
-            }
-          }
-        } else {
-          console.log('No URL returned from signInWithOAuth');
-          setIsLoading(false);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: Platform.OS === 'web' 
+            ? window.location.origin 
+            : Linking.createURL('/', { scheme: 'myapp' })
         }
+      });
+      
+      if (error) {
+        console.error('Email sign-up error:', error);
+        setIsLoading(false);
+        return { error };
       }
-    } catch (error: any) {
-      console.error('Google authentication failed:', error);
+      
+      console.log('Email sign-up successful');
+      
+      // If email confirmation is required
+      if (data.user && !data.user.confirmed_at) {
+        console.log('Email confirmation required');
+        setIsLoading(false);
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Email sign-up failed:', error);
       setIsLoading(false);
+      return { error };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      console.log('Starting password reset process...');
+      
+      const redirectTo = Platform.OS === 'web' 
+        ? window.location.origin + '/reset-password' 
+        : Linking.createURL('/reset-password', { scheme: 'myapp' });
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo
+      });
+      
+      setIsLoading(false);
+      
+      if (error) {
+        console.error('Password reset error:', error);
+        return { error };
+      }
+      
+      console.log('Password reset email sent');
+      return { error: null };
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      setIsLoading(false);
+      return { error };
     }
   };
 
@@ -459,8 +234,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isLoading,
-        signInWithApple,
-        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        resetPassword,
         signOut,
       }}
     >

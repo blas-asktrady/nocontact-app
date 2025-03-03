@@ -1,22 +1,26 @@
-import { StyleSheet, Platform, Animated, Dimensions, Image } from 'react-native';
+import { StyleSheet, Platform, Animated, Dimensions, Image, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '@/hooks/useUser';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { AntDesign as AppleIcon } from '@expo/vector-icons';
-import GoogleLogo from '@/components/ui/GoogleLogo';
-
-const { height } = Dimensions.get('window');
+import { AntDesign } from '@expo/vector-icons';
 
 // Import the LoadingScreen component
 import LoadingScreen from '@/components/LoadingScreen'; // Adjust the import path as needed
 
+const { height } = Dimensions.get('window');
+
 export default function HomeScreen() {
-  const { user, signInWithApple, signInWithGoogle } = useUser();
+  const { user, signInWithEmail, signUpWithEmail } = useUser();
   const slideAnim = useRef(new Animated.Value(height)).current;
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -26,72 +30,81 @@ export default function HomeScreen() {
     }).start();
   }, [user]);
   
-  // State to track when we're handling a redirect with a token
-  const [handlingRedirect, setHandlingRedirect] = useState(false);
-
-  // Add a new useEffect to handle the hash fragment in the URL
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      // Check if there's an access token in the URL hash
-      const hashParams = window.location.hash.substring(1);
-      if (hashParams.includes('access_token=')) {
-        // Show loading screen immediately
-        setHandlingRedirect(true);
-        
-        // Parse the access token from the URL
-        const params = new URLSearchParams(hashParams);
-        const accessToken = params.get('access_token');
-        
-        if (accessToken) {
-          console.log('Access token found in URL, handling sign-in');
-          // Process the token - this will depend on your useUser implementation
-          
-          // Clear the hash from the URL without reloading the page
-          window.history.replaceState(null, '', window.location.pathname);
-          
-          // Option 1: If your useUser hook has a method to process tokens directly:
-          // processAuthToken(accessToken).then(() => {
-          //   // After successful token processing, route to appropriate screen
-          //   router.push('/dashboard');
-          // });
-          
-          // Option 2: If you need to force reload:
-          setTimeout(() => {
-            window.location.reload();
-          }, 500); // Small delay to ensure the loading screen appears
-        }
-      }
-    }
-  }, []);
-  
-  const handleGetStarted = () => {
-    router.push('/survey');
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsAuthenticating(true);
-      setHandlingRedirect(true); // Show loading screen immediately
-      
-      // Use the signInWithGoogle method from useUser, which now properly handles redirects
-      await signInWithGoogle();
-      
-      // No need to set isAuthenticating to false here as the page will redirect and reload
-      // The useUser hook now handles the redirect and session setup
-    } catch (error) {
-      console.error('Error with Google sign in:', error);
-      setIsAuthenticating(false);
-      setHandlingRedirect(false); // Hide loading screen on error
-    }
-  };
-
-  // Check if the app is running in a web browser
-  const isRunningInBrowser = Platform.OS === 'web';
-
-  // Render the loading screen if handling a redirect
-  if (handlingRedirect) {
+  // If we're in a loading state, show the loading screen
+  if (isLoading) {
     return <LoadingScreen/>;
   }
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6; // Minimum 6 characters
+  };
+
+  const handleSignIn = async () => {
+    // Reset error message
+    setErrorMessage('');
+
+    // Validate inputs
+    if (!validateEmail(email)) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setErrorMessage('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await signInWithEmail(email, password);
+    
+    if (error) {
+      setErrorMessage(error.message || 'Sign in failed. Please check your credentials.');
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    // Reset error message
+    setErrorMessage('');
+
+    // Validate inputs
+    if (!validateEmail(email)) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setErrorMessage('Password must be at least 6 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await signUpWithEmail(email, password);
+    
+    if (error) {
+      setErrorMessage(error.message || 'Sign up failed. Please try again.');
+      setIsLoading(false);
+    } else {
+      // Show confirmation message if email confirmation is required
+      setErrorMessage('Please check your email to confirm your account.');
+      setIsLoading(false);
+    }
+  };
+
+  const toggleAuthMode = () => {
+    setIsSignUp(!isSignUp);
+    setErrorMessage('');
+  };
   
   return (
     <ThemedView style={styles.container}>
@@ -140,29 +153,59 @@ export default function HomeScreen() {
             </ThemedView>
           </ThemedView>
 
-          {/* Button area fixed at bottom */}
-          <ThemedView style={styles.buttons}>
-            {/* Always show Apple Sign-in button */}
-            <ThemedView 
-              style={styles.appleButton}
-              onTouchEnd={signInWithApple}
-            >
-              <AppleIcon name="apple1" size={18} color="#FFFFFF" style={styles.appleIcon} />
-              <ThemedText style={styles.appleButtonText}>Sign in with Apple</ThemedText>
-            </ThemedView>
+          {/* Auth Form */}
+          <ThemedView style={styles.authForm}>
+            {errorMessage ? (
+              <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+            ) : null}
+
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
             
-            {/* Show Google Sign-in button on all platforms */}
-            <ThemedView 
-              style={[
-                styles.googleButton,
-                isAuthenticating && styles.disabledButton
-              ]}
-              onTouchEnd={() => isAuthenticating ? undefined : handleGoogleSignIn()}
-            >
-              <GoogleLogo size={20} />
-              <ThemedText style={styles.googleButtonText}>
-                {isAuthenticating ? 'Signing in...' : 'Sign in with Google'}
-              </ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={true}
+            />
+            
+            {isSignUp ? (
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+              />
+            ) : null}
+
+            {/* Button area fixed at bottom */}
+            <ThemedView style={styles.buttons}>
+              <ThemedView 
+                style={styles.primaryButton}
+                onTouchEnd={isSignUp ? handleSignUp : handleSignIn}
+              >
+                <ThemedText style={styles.primaryButtonText}>
+                  {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
+                </ThemedText>
+              </ThemedView>
+              
+              <ThemedView style={styles.toggleContainer}>
+                <ThemedText style={styles.toggleText}>
+                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                </ThemedText>
+                <ThemedText style={styles.toggleButton} onPress={toggleAuthMode}>
+                  {isSignUp ? 'Sign In' : 'Sign Up'}
+                </ThemedText>
+              </ThemedView>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -204,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    height: '50%', // Further reduced height to minimize bottom white space
+    height: '60%', // Increased to accommodate form fields
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -217,10 +260,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 12, // Reduced bottom padding
+    paddingBottom: 12,
     backgroundColor: 'transparent',
-    justifyContent: 'space-between', // Puts buttons at bottom
+    justifyContent: 'space-between',
   },
   mainContent: {
     backgroundColor: 'transparent',
@@ -259,7 +301,7 @@ const styles = StyleSheet.create({
   },
   stats: {
     alignItems: 'center',
-    marginTop: 16, // Small space after header
+    marginTop: 16,
     backgroundColor: 'transparent',
   },
   ratingText: {
@@ -273,16 +315,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
+  authForm: {
+    width: '100%',
+    marginTop: 20,
+    backgroundColor: 'transparent',
+  },
+  input: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#FF3B30',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   buttons: {
+    marginTop: 10,
     gap: 6,
     backgroundColor: 'transparent',
-    marginBottom: 8, // Add a small margin to prevent buttons from being too close to bottom edge
+    marginBottom: 8,
   },
-  appleButton: {
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000000',
+    backgroundColor: '#6a77e3',
     borderRadius: 50,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -290,48 +352,26 @@ const styles = StyleSheet.create({
     height: 50,
     marginBottom: 6,
   },
-  appleIcon: {
-    marginRight: 8,
-  },
-  appleButtonText: {
+  primaryButtonText: {
     fontSize: 15,
     fontWeight: '500',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     color: '#FFFFFF',
   },
-  googleButton: {
+  toggleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#DADCE0',
-  },
-  googleButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    color: '#3C4043',
-  },
-  disabledButton: {
-    opacity: 0.7,
-  },
-  skipButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 30,
-    padding: 14,
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 10,
   },
-  skipButtonText: {
-    color: '#6a77e3',
-    fontSize: 17,
+  toggleText: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  toggleButton: {
+    fontSize: 14,
     fontWeight: '600',
-    textDecorationLine: 'underline',
+    color: '#6a77e3',
+    marginLeft: 5,
   },
 });
