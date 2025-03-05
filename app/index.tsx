@@ -1,4 +1,4 @@
-import { StyleSheet, Platform, Animated, Dimensions, Image, TextInput } from 'react-native';
+import { StyleSheet, Platform, Animated, Dimensions, Image, TextInput, KeyboardAvoidingView, ScrollView, Keyboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '@/hooks/useUser';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,27 +8,29 @@ import { useEffect, useRef, useState } from 'react';
 import { AntDesign } from '@expo/vector-icons';
 
 // Import the LoadingScreen component
-import LoadingScreen from '@/components/LoadingScreen'; // Adjust the import path as needed
+import LoadingScreen from '@/components/LoadingScreen';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { user, signInWithEmail, signUpWithEmail } = useUser();
-  const slideAnim = useRef(new Animated.Value(height)).current;
+  const slideAnim = useRef(new Animated.Value(-height)).current; // Start from top (negative height)
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
+    // Animate the card from top to middle
     Animated.timing(slideAnim, {
-      toValue: 0,
+      toValue: 0, // Move to position 0 (middle)
       duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, [user]);
+  }, []);
   
   // If we're in a loading state, show the loading screen
   if (isLoading) {
@@ -108,22 +110,25 @@ export default function HomeScreen() {
   
   return (
     <ThemedView style={styles.container}>
-      {/* Background Image with Gradient Overlay */}
-      <ThemedView style={styles.backgroundContainer}>
-        <ThemedView style={styles.imageContainer}>
+      {/* Gradient Background */}
+      <LinearGradient
+        colors={['rgba(98, 95, 255, 0.8)', 'rgba(26, 135, 219, 0.8)']}
+        style={styles.gradient}
+      />
+      
+      {/* Bottom half with different background */}
+      <ThemedView style={styles.bottomHalf}>
+        {/* Panda Image at Bottom */}
+        <ThemedView style={styles.pandaContainer}>
           <Image 
             source={require('@/assets/mascot/panda.png')} 
-            style={styles.backgroundImage}
+            style={styles.pandaImage}
             resizeMode="contain"
-          />
-          <LinearGradient
-            colors={['rgba(98, 95, 255, 0.8)', 'rgba(26, 135, 219, 0.8)']}
-            style={styles.gradient}
           />
         </ThemedView>
       </ThemedView>
 
-      {/* Animated Content Card */}
+      {/* Content Card from Top */}
       <Animated.View 
         style={[
           styles.contentCard,
@@ -132,83 +137,81 @@ export default function HomeScreen() {
           }
         ]}
       >
-        <ThemedView style={styles.content}>
-          {/* Main content area */}
-          <ThemedView style={styles.mainContent}>
-            <ThemedView style={styles.header}>
-              <ThemedText style={styles.title}>Meet your new buddy,{'\n'}NoContact Panda</ThemedText>
-              <ThemedView style={styles.buddyCircle}>
-                <Image 
-                  source={require('@/assets/mascot/face.png')} 
-                  style={styles.buddyImage}
-                  resizeMode="contain"
-                />
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollViewContent}
+            keyboardShouldPersistTaps="always"
+            showsVerticalScrollIndicator={false}
+          >
+            <ThemedView style={styles.content}>
+              <ThemedView style={styles.header}>
+                <ThemedText style={styles.title}>Meet your new buddy,{'\n'}NoContact Panda</ThemedText>
+                <ThemedText style={styles.subtitle}>Feel better every day</ThemedText>
               </ThemedView>
-              <ThemedText style={styles.subtitle}>Feel better every day</ThemedText>
-            </ThemedView>
 
-            <ThemedView style={styles.stats}>
-              <ThemedText style={styles.ratingText}>⭐️⭐️⭐️⭐️⭐️</ThemedText>
-              <ThemedText style={styles.achievementText}>Helped 100+ people overcome breakups</ThemedText>
-            </ThemedView>
-          </ThemedView>
+              <ThemedView style={styles.stats}>
+                <ThemedText style={styles.ratingText}>⭐️⭐️⭐️⭐️⭐️</ThemedText>
+                <ThemedText style={styles.achievementText}>Helped 100+ people overcome breakups</ThemedText>
+              </ThemedView>
 
-          {/* Auth Form */}
-          <ThemedView style={styles.authForm}>
-            {errorMessage ? (
-              <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
-            ) : null}
+              {errorMessage ? (
+                <ThemedText style={styles.errorText}>{errorMessage}</ThemedText>
+              ) : null}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-            />
-            
-            {isSignUp ? (
               <TextInput
                 style={styles.input}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
                 secureTextEntry={true}
               />
-            ) : null}
-
-            {/* Button area fixed at bottom */}
-            <ThemedView style={styles.buttons}>
-              <ThemedView 
-                style={styles.primaryButton}
-                onTouchEnd={isSignUp ? handleSignUp : handleSignIn}
-              >
-                <ThemedText style={styles.primaryButtonText}>
-                  {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
-                </ThemedText>
-              </ThemedView>
               
-              <ThemedView style={styles.toggleContainer}>
-                <ThemedText style={styles.toggleText}>
-                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-                </ThemedText>
-                <ThemedText style={styles.toggleButton} onPress={toggleAuthMode}>
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-                </ThemedText>
+              {isSignUp ? (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={true}
+                />
+              ) : null}
+
+              <ThemedView style={styles.buttons}>
+                <ThemedView 
+                  style={styles.primaryButton}
+                  onTouchEnd={isSignUp ? handleSignUp : handleSignIn}
+                >
+                  <ThemedText style={styles.primaryButtonText}>
+                    {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
+                  </ThemedText>
+                </ThemedView>
+                
+                <ThemedView style={styles.toggleContainer}>
+                  <ThemedText style={styles.toggleText}>
+                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                  </ThemedText>
+                  <ThemedText style={styles.toggleButton} onPress={toggleAuthMode}>
+                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                  </ThemedText>
+                </ThemedView>
               </ThemedView>
             </ThemedView>
-          </ThemedView>
-        </ThemedView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Animated.View>
     </ThemedView>
   );
@@ -218,58 +221,66 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  imageContainer: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: '80%',
-    height: '40%',
-    top: '10%',
-    left: '10%',
-    opacity: 0.9,
-    position: 'absolute',
-    zIndex: 1,
-  },
   gradient: {
     ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
   },
-  contentCard: {
+  bottomHalf: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(127, 111, 235, 0.8)', // Match the bottom color of the gradient
+    zIndex: 1,
+  },
+  pandaContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  pandaImage: {
+    width: width * 0.8,
+    height: width * 0.8,
+    marginBottom: -20, // Slightly overlap with bottom edge
+  },
+  contentCard: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    height: '60%', // Increased to accommodate form fields
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    height: '60%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -3,
+      height: 3,
     },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
+    zIndex: 2,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   content: {
     flex: 1,
     padding: 20,
-    paddingBottom: 12,
-    backgroundColor: 'transparent',
-    justifyContent: 'space-between',
-  },
-  mainContent: {
     backgroundColor: 'transparent',
   },
   header: {
     alignItems: 'center',
     backgroundColor: 'transparent',
+    marginTop: 40, // Increased top margin for more padding
+    marginBottom: 10, // Added bottom margin
   },
   title: {
     fontSize: 28,
@@ -279,29 +290,16 @@ const styles = StyleSheet.create({
     color: '#000000',
     lineHeight: 34,
   },
-  buddyCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#6a77e3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-    overflow: 'hidden',
-  },
-  buddyImage: {
-    width: '75%',
-    height: '75%',
-  },
   subtitle: {
     fontSize: 18,
     textAlign: 'center',
     color: '#000000',
     opacity: 0.7,
+    marginBottom: 20,
   },
   stats: {
     alignItems: 'center',
-    marginTop: 16,
+    marginBottom: 20,
     backgroundColor: 'transparent',
   },
   ratingText: {
@@ -314,11 +312,6 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontWeight: '500',
     textAlign: 'center',
-  },
-  authForm: {
-    width: '100%',
-    marginTop: 20,
-    backgroundColor: 'transparent',
   },
   input: {
     backgroundColor: '#F5F5F5',
@@ -338,7 +331,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 6,
     backgroundColor: 'transparent',
-    marginBottom: 8,
   },
   primaryButton: {
     flexDirection: 'row',
@@ -363,6 +355,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
+    backgroundColor: 'transparent',
   },
   toggleText: {
     fontSize: 14,
