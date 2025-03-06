@@ -7,22 +7,32 @@ import {
   Alert,
   SafeAreaView,
   Platform,
-  StatusBar
+  StatusBar,
+  Text
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useJournal } from '@/hooks/useJournal';
+import Constants from 'expo-constants';
 
 type RootStackParamList = {
-  'journal/new': undefined;
+  'journal/new': {
+    content?: string;
+    id?: string;
+    timestamp?: number;
+    description?: string;
+    type?: string;
+    isNewEntry?: boolean;
+  };
   'journal/edit': {
     content?: string;
     id?: string;
     timestamp?: number;
     description?: string;
     type?: string;
+    isNewEntry?: boolean;
   };
   'tabs': {
     screen?: string;
@@ -37,6 +47,7 @@ type RouteParams = {
   description?: string;
   type?: string;
   content?: string;
+  isNewEntry?: boolean;
 };
 
 export default function NewJournalScreen() {
@@ -50,16 +61,33 @@ export default function NewJournalScreen() {
   const [timestamp, setTimestamp] = useState<number | undefined>();
   const [description, setDescription] = useState<string | undefined>();
   const [type, setType] = useState<string | undefined>();
+  const [isNewEntryFlow, setIsNewEntryFlow] = useState(true);
 
   useEffect(() => {
     if (params) {
+      if (params.isNewEntry !== undefined) {
+        setIsNewEntryFlow(params.isNewEntry);
+      } else {
+        setIsNewEntryFlow(!params.id);
+      }
+      
       setEntryId(params.id);
       setTimestamp(params.timestamp ? Number(params.timestamp) : undefined);
       setDescription(params.description);
       setType(params.type);
-      if (params.content) {
+      
+      if (params.content !== undefined) {
         setJournalEntry(params.content);
+      } else if (isNewEntryFlow && !params.id) {
+        setJournalEntry('');
       }
+    } else {
+      setIsNewEntryFlow(true);
+      setJournalEntry('');
+      setEntryId(undefined);
+      setTimestamp(undefined);
+      setDescription(undefined);
+      setType(undefined);
     }
   }, [params]);
 
@@ -90,15 +118,13 @@ export default function NewJournalScreen() {
 
     if (entryId) {
       console.log('update entry');
-      // Update existing entry
       updateEntry({
         id: entryId,
         timestamp: timestamp ? Number(timestamp) : Date.now(),
-        description: description || journalEntry.slice(0, 100), // First 100 chars as description
+        description: description || journalEntry.slice(0, 100),
         type: type || 'entry',
         content: journalEntry
       }).then(() => {
-        // Always navigate to the journal tab after saving
         navigation.navigate('tabs', { screen: 'journal' });
       }).catch(error => {
         console.error('Error updating journal entry:', error);
@@ -106,13 +132,11 @@ export default function NewJournalScreen() {
       });
     } else {
       console.log('add entry');
-      // Add new entry
       addEntry({
-        description: journalEntry.slice(0, 100), // First 100 chars as description
+        description: journalEntry.slice(0, 100),
         type: 'entry',
         content: journalEntry
       }).then(() => {
-        // Always navigate to the journal tab after saving
         navigation.navigate('tabs', { screen: 'journal' });
       }).catch(error => {
         console.error('Error adding journal entry:', error);
@@ -122,16 +146,22 @@ export default function NewJournalScreen() {
   };
 
   const handleCancel = () => {
-    navigation.navigate('tabs', { screen: 'journal' });
+    if (isNewEntryFlow) {
+      navigation.navigate('tabs', { screen: 'journal' });
+    } else {
+      navigation.navigate('tabs', { screen: 'journal' });
+    }
+    console.log('Cancel button pressed');
   };
 
-  const handleEdit = () => {
+  const handleGoToEdit = () => {
     navigation.navigate('journal/edit', {
       content: journalEntry,
       id: entryId,
       timestamp: timestamp,
       description: description,
-      type: type
+      type: type,
+      isNewEntry: isNewEntryFlow
     });
   };
 
@@ -158,29 +188,32 @@ export default function NewJournalScreen() {
     );
   };
 
+  const statusBarHeight = Platform.OS === 'ios' ? Constants.statusBarHeight || 44 : 0;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.rootContainer]}>
+      <View style={{height: statusBarHeight, backgroundColor: '#FFFFFF'}} />
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <ThemedText style={styles.title}>
+            <Text style={styles.title}>
               {entryId ? 'Edit Journal Entry' : 'New Journal Entry'}
-            </ThemedText>
+            </Text>
           </View>
           
           {entryId && (
             <View style={styles.iconContainer}>
               <TouchableOpacity 
-                onPress={handleEdit}
+                onPress={handleGoToEdit}
                 style={styles.iconButton}
               >
-                <Feather name="edit-2" size={24} color={styles.title.color} />
+                <Feather name="edit-2" size={24} color="black" />
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleDelete}
                 style={styles.iconButton}
               >
-                <Feather name="trash-2" size={24} color={styles.title.color} />
+                <Feather name="trash-2" size={24} color="black" />
               </TouchableOpacity>
             </View>
           )}
@@ -193,14 +226,14 @@ export default function NewJournalScreen() {
         <View style={styles.inputContainer}>
           <TouchableOpacity 
             style={styles.inputWrapper}
-            onPress={handleEdit}
+            onPress={handleGoToEdit}
             activeOpacity={0.7}
             delayPressIn={0}
           >
             <TextInput
               style={[styles.input]}
               placeholder="Write about your recovery journey, thoughts, and feelings..."
-              placeholderTextColor="#757575" // Darker for better contrast
+              placeholderTextColor="#757575"
               multiline
               textAlignVertical="top"
               value={journalEntry}
@@ -215,8 +248,9 @@ export default function NewJournalScreen() {
           <TouchableOpacity 
             style={[styles.button, styles.cancelButton]} 
             onPress={handleCancel}
+            activeOpacity={0.7}
           >
-            <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -228,36 +262,32 @@ export default function NewJournalScreen() {
             onPress={handleSave}
             disabled={journalEntry.trim() === ''}
           >
-            <ThemedText style={[
+            <Text style={[
               styles.saveButtonText,
               journalEntry.trim() === '' && styles.disabledButtonText
-            ]}>Save</ThemedText>
+            ]}>Save</Text>
           </TouchableOpacity>
         </View>
       </ThemedView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-// Modified styles with improved colors and SafeAreaView
 const styles = StyleSheet.create({
-  safeArea: {
+  rootContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff', // This should be handled by ThemedView
+    backgroundColor: '#fff',
     padding: 20,
-    paddingTop: 30, // Increased top padding to prevent title cutoff
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
-    marginTop: 10, // Added top margin for the header
   },
   titleContainer: {
     flex: 1,
@@ -268,7 +298,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   iconButton: {
-    padding: 8, // Increased from 4 for better touch target
+    padding: 8,
   },
   title: {
     fontSize: 32,
@@ -286,20 +316,20 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: '#ECEEF8', // Slightly darker for better contrast
+    backgroundColor: '#ECEEF8',
     borderRadius: 12,
-    borderWidth: 1, // Added light border for definition
-    borderColor: '#D0D4E8', // Light border color
+    borderWidth: 1,
+    borderColor: '#D0D4E8',
   },
   input: {
     flex: 1,
     fontSize: 16,
-    // Remove hardcoded color, let TextInput handle themed colors
     padding: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 16,
   },
   button: {
     flex: 1,
@@ -308,10 +338,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#FF0000', // Changed to a more prominent red
+    backgroundColor: '#FF0000',
+    opacity: 1,
   },
   saveButton: {
-    backgroundColor: '#4B69FF', // Keep the current blue
+    backgroundColor: '#4B69FF',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -324,10 +355,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   disabledButton: {
-    backgroundColor: '#A0A0A0', // Gray color for disabled state
+    backgroundColor: '#A0A0A0',
     opacity: 0.7,
   },
   disabledButtonText: {
-    color: '#E0E0E0', // Lighter text for disabled state
+    color: '#E0E0E0',
   },
 });

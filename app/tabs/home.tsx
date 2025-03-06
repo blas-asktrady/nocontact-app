@@ -391,6 +391,7 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.backgroundBase} />
       <ImageBackground 
         source={require('@/assets/home/garden.png')}
         style={styles.container}
@@ -480,8 +481,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#c6fbce',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  backgroundBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#c6fbce',
+    zIndex: 0,
   },
   container: {
     flex: 1,

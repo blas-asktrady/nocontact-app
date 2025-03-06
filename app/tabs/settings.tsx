@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Platform,
 import DateTimePicker from '@react-native-community/datetimepicker';
 import useUserSettings from '@/hooks/useUserSettings';
 import { useUser } from '@/hooks/useUser';
+import { useRouter } from 'expo-router';
 
 const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
@@ -16,6 +17,7 @@ const SettingsScreen = () => {
     updateNotificationPreferences,
     refetchSettings
   } = useUserSettings(user?.id || '');
+  const router = useRouter();
 
   // Initialize notification state from user settings
   useEffect(() => {
@@ -165,14 +167,8 @@ const SettingsScreen = () => {
             title="Change Initial NoContact Day"
             hasArrow
             onPress={() => {
-              if (Platform.OS === 'ios') {
-                setShowDatePicker(true);
-              } else {
-                // For non-iOS devices, generate a random date and update
-                const randomDate = generateRandomDate();
-                updateNoContactDate(randomDate)
-                  .then(() => refetchSettings()); // Refetch settings after update
-              }
+              // Navigate to the date screen for all platforms
+              router.push('/settings/date');
             }}
           />
           {showDatePicker && (

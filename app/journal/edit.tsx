@@ -11,9 +11,18 @@ type RootStackParamList = {
     timestamp?: string;
     description?: string;
     type?: string;
+    isNewEntry?: boolean;
   };
   'tabs': {
     screen?: string;
+  };
+  'journal/new': {
+    content?: string;
+    id?: string;
+    timestamp?: string;
+    description?: string;
+    type?: string;
+    isNewEntry?: boolean;
   };
 };
 
@@ -41,22 +50,16 @@ export default function EditJournalScreen() {
   const handleDone = () => {
     // Save the changes and navigate back
     try {
-      // Pass the updated content back to the previous screen
-      if (route.params?.id) {
-        // If we have an ID, this is an existing entry
-        navigation.navigate('journal/new', {
-          id: route.params.id,
-          content: journalEntry,
-          timestamp: route.params.timestamp,
-          description: route.params.description,
-          type: route.params.type
-        });
-      } else {
-        // For a new entry
-        navigation.navigate('journal/new', {
-          content: journalEntry
-        });
-      }
+      // When done editing, always navigate back to journal/new with updated content
+      // Pass along the isNewEntry flag to maintain workflow context
+      navigation.navigate('journal/new', {
+        id: route.params?.id,
+        content: journalEntry,
+        timestamp: route.params?.timestamp,
+        description: route.params?.description,
+        type: route.params?.type,
+        isNewEntry: route.params?.isNewEntry
+      });
     } catch (error) {
       console.error('Navigation error:', error);
       try {
@@ -68,24 +71,29 @@ export default function EditJournalScreen() {
   };
 
   const handleCancel = () => {
-    // Simplify navigation - always navigate back to journal/new
     try {
-      if (route.params?.id) {
-        // If we have an ID, pass all the existing parameters back
+      if (route.params?.isNewEntry) {
+        // Coming from new entry flow - return to empty new journal screen
+        navigation.navigate('journal/new', {
+          isNewEntry: true, // Keep the workflow context
+          content: '' // Reset content for new entries
+        });
+      } else if (route.params?.id) {
+        // Coming from existing entry flow - return to existing entry view
         navigation.navigate('journal/new', {
           id: route.params.id,
           content: route.params.content || '',
-          timestamp: route.params.timestamp || '',
-          description: route.params.description || '',
-          type: route.params.type || ''
+          timestamp: route.params.timestamp,
+          description: route.params.description,
+          type: route.params.type,
+          isNewEntry: false
         });
       } else {
-        // For a new entry, just navigate back to journal/new
+        // Fallback - go to new journal screen
         navigation.navigate('journal/new');
       }
     } catch (error) {
       console.error('Cancel navigation error:', error);
-      // Fallback navigation
       navigation.navigate('tabs', { screen: 'journal' });
     }
   };

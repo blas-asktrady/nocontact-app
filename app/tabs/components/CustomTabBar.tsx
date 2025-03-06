@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image, Platform } from 'react-native';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -21,8 +21,15 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
   // Check if home is the selected tab
   const isHomeSelected = state.routes[state.index]?.name === 'home';
   
+  // Check if device has a home indicator (iPhone X and newer)
+  const hasHomeIndicator = Platform.OS === 'ios' && !Platform.isPad && Dimensions.get('window').height >= 812;
+  
   return (
-    <View style={[styles.container, isHomeSelected && styles.homeContainer]}>
+    <View style={[
+      styles.container, 
+      isHomeSelected && styles.homeContainer,
+      hasHomeIndicator && styles.containerWithHomeIndicator
+    ]}>
       {/* Background with Gradient */}
       <LinearGradient
         colors={['#3a47b3', '#4a57c3', '#5a67d3']}
@@ -94,7 +101,20 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
         </View>
         
         {/* Center space for chat button */}
-        <View style={styles.centerSpace} />
+        <View style={styles.centerSpace}>
+          {/* Chat Button - Moved inside the tabs container for proper alignment */}
+          <Link href="/chat" asChild>
+            <TouchableOpacity style={styles.chatButtonTouchable}>
+              <View style={styles.chatButtonInner}>
+                <Image 
+                  source={require('@/assets/navbar/icons-face.png')} 
+                  style={styles.chatButtonImage} 
+                />
+              </View>
+              <Text style={styles.chatLabel}>Chat</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
         
         {/* Right side tabs */}
         <View style={styles.tabGroup}>
@@ -157,19 +177,6 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
           })}
         </View>
       </View>
-
-      {/* Centered Chat Button */}
-      <Link href="/chat" asChild>
-        <TouchableOpacity style={styles.chatButton}>
-          <View style={styles.chatButtonInner}>
-            <Image 
-              source={require('@/assets/navbar/icons-face.png')} 
-              style={styles.chatButtonImage} 
-            />
-          </View>
-          <Text style={styles.chatLabel}>Chat</Text>
-        </TouchableOpacity>
-      </Link>
     </View>
   );
 }
@@ -180,6 +187,10 @@ const styles = StyleSheet.create({
     height: 70,
     position: 'relative',
     backgroundColor: '#fff',
+  },
+  containerWithHomeIndicator: {
+    height: 90, // Adjusted from 95 to 90
+    paddingBottom: 20, // Adjusted from 25 to 20
   },
   homeContainer: {
     backgroundColor: '#57a836',
@@ -200,7 +211,8 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
     paddingHorizontal: 12,
-    paddingBottom: 5,
+    paddingTop: 10, // Added top padding for icons
+    paddingBottom: Platform.OS === 'ios' ? (Dimensions.get('window').height >= 812 ? 15 : 5) : 5, // Adjusted from 20 to 15
   },
   tabGroup: {
     flexDirection: 'row',
@@ -208,7 +220,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   centerSpace: {
-    width: 65, // Reduced from 80 to 65 to create less separation
+    width: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tab: {
     flex: 1,
@@ -224,6 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     height: '100%',
+    paddingTop: 5, // Added padding to the top of tab content
   },
   label: {
     fontFamily: 'System',
@@ -238,19 +253,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'System',
   },
-  homeIcon: {
-    // You can remove this style completely
-  },
-  chatButton: {
-    position: 'absolute',
-    width: 50,
-    height: 70, 
-    bottom: 15, // Increased from 10 to 15 to move it higher
-    left: '50%',
-    marginLeft: -25,
+  chatButtonTouchable: {
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2,
+    width: 70,
+    height: '100%',
   },
   chatButtonInner: {
     width: 50,
