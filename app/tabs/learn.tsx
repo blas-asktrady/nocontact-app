@@ -4,7 +4,10 @@ import {
   Text, 
   StyleSheet, 
   ScrollView, 
-  TouchableOpacity 
+  TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  StatusBar
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -66,33 +69,40 @@ const LearnScreen = () => {
   );
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>
-          {blog?.title || "Understanding Grief"}
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          {blog?.description || ""}
-        </Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>
+            {blog?.title || "Understanding Grief"}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {blog?.description || ""}
+          </Text>
+        </View>
 
-      <View style={styles.stagesContainer}>
-        <Text style={styles.sectionTitle}>Stages of Grief</Text>
-        {stages.map((stage) => (
-          <StageCard
-            key={stage.id}
-            stage={stage}
-          />
-        ))}
-      </View>
-    </ScrollView>
+        <View style={styles.stagesContainer}>
+          <Text style={styles.sectionTitle}>Stages of Grief</Text>
+          {stages.map((stage) => (
+            <StageCard
+              key={stage.id}
+              stage={stage}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
@@ -52,59 +52,63 @@ const ArticleScreen = () => {
 
   if (!article) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <Text>Loading article...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.loadingContainer]}>
+          <Text>Loading article...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Back Button */}
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleBackPress}
-        >
-          <Feather name="arrow-left" size={24} color="#000" />
-        </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={handleBackPress}
+          >
+            <Feather name="arrow-left" size={24} color="#000" />
+          </TouchableOpacity>
 
-        {/* Article Title */}
-        <Text style={styles.title}>{article.title}</Text>
+          {/* Article Title */}
+          <Text style={styles.title}>{article.title}</Text>
 
-        {/* Author Info */}
-        <View style={styles.authorContainer}>
-          <Image
-            source={article.author.avatar}
-            style={styles.authorAvatar}
-          />
-          <View style={styles.authorInfo}>
-            <Text style={styles.authorName}>By {article.author.name}</Text>
-            <Text style={styles.authorRole}>{article.author.role}</Text>
+          {/* Author Info */}
+          <View style={styles.authorContainer}>
+            <Image
+              source={article.author.avatar}
+              style={styles.authorAvatar}
+            />
+            <View style={styles.authorInfo}>
+              <Text style={styles.authorName}>By {article.author.name}</Text>
+              <Text style={styles.authorRole}>{article.author.role}</Text>
+            </View>
           </View>
+
+          {/* Read Time */}
+          <View style={styles.readTimeContainer}>
+            <Feather name="clock" size={16} color="#666666" />
+            <Text style={styles.readTime}>{article.duration} read</Text>
+          </View>
+
+          {/* Audio Player Button */}
+          <TouchableOpacity 
+            style={styles.audioButton}
+            onPress={handleAudioPlay}
+          >
+            <Feather name="play" size={24} color="white" />
+            <Text style={styles.audioButtonText}>Listen to article</Text>
+          </TouchableOpacity>
+
+          {/* Article Content with Markdown */}
+          <Markdown style={markdownStyles}>
+            {article.content}
+          </Markdown>
         </View>
-
-        {/* Read Time */}
-        <View style={styles.readTimeContainer}>
-          <Feather name="clock" size={16} color="#666666" />
-          <Text style={styles.readTime}>{article.duration} read</Text>
-        </View>
-
-        {/* Audio Player Button */}
-        <TouchableOpacity 
-          style={styles.audioButton}
-          onPress={handleAudioPlay}
-        >
-          <Feather name="play" size={24} color="white" />
-          <Text style={styles.audioButtonText}>Listen to article</Text>
-        </TouchableOpacity>
-
-        {/* Article Content with Markdown */}
-        <Markdown style={markdownStyles}>
-          {article.content}
-        </Markdown>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -137,6 +141,11 @@ const markdownStyles = {
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, Dimensions, Platform, SafeAreaView, StatusBar } from 'react-native';
 import * as Storage from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -390,92 +390,99 @@ const HomeScreen = () => {
   }, [userSettings?.no_contact_date]);
 
   return (
-    <ImageBackground 
-      source={require('@/assets/home/garden.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      {/* Preload the flower image once */}
-      <Image 
-        source={require('@/assets/home/flower.png')} 
-        style={{ width: 0, height: 0 }}
-      />
-      
-      {/* Use absolute positioning to place flowers */}
-      <View style={styles.flowersContainer}>
-        {flowers.map((flower, index) => (
-          <View 
-            key={`flower-${index}`}
-            style={[
-              styles.flowerWrapper,
-              {
-                left: flower.x - (flower.size / 2),
-                top: flower.y - (flower.size / 2),
-                width: flower.size,
-                height: flower.size,
-                opacity: flower.opacity,
-                transform: [
-                  { scaleX: flower.mirrored ? -1 : 1 }
-                ],
-                zIndex: Math.floor(flower.y), // Higher y-values (lower on screen) get higher z-index
-              }
-            ]}
-          >
-            <View style={styles.flowerImageContainer}>
-              <Image 
-                source={require('@/assets/home/flower.png')} 
-                style={styles.flowerImage}
-                resizeMode="contain"
-              />
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground 
+        source={require('@/assets/home/garden.png')}
+        style={styles.container}
+        resizeMode="cover"
+      >
+        {/* Preload the flower image once */}
+        <Image 
+          source={require('@/assets/home/flower.png')} 
+          style={{ width: 0, height: 0 }}
+        />
+        
+        {/* Use absolute positioning to place flowers */}
+        <View style={styles.flowersContainer}>
+          {flowers.map((flower, index) => (
+            <View 
+              key={`flower-${index}`}
+              style={[
+                styles.flowerWrapper,
+                {
+                  left: flower.x - (flower.size / 2),
+                  top: flower.y - (flower.size / 2),
+                  width: flower.size,
+                  height: flower.size,
+                  opacity: flower.opacity,
+                  transform: [
+                    { scaleX: flower.mirrored ? -1 : 1 }
+                  ],
+                  zIndex: Math.floor(flower.y), // Higher y-values (lower on screen) get higher z-index
+                }
+              ]}
+            >
+              <View style={styles.flowerImageContainer}>
+                <Image 
+                  source={require('@/assets/home/flower.png')} 
+                  style={styles.flowerImage}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+        
+        <View style={styles.content}>
+          <Text style={styles.label}>NoContact 🐼</Text>
+          <Text style={styles.title}>You've stayed strong for</Text>
+          
+          <View style={styles.timeContainer}>
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeValue}>{String(timeElapsed.months).padStart(2, '0')}</Text>
+              <Text style={styles.timeLabel}>MO</Text>
+            </View>
+            
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeValue}>{String(timeElapsed.days).padStart(2, '0')}</Text>
+              <Text style={styles.timeLabel}>DAYS</Text>
+            </View>
+            
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeValue}>{String(timeElapsed.hours).padStart(2, '0')}</Text>
+              <Text style={styles.timeLabel}>HRS</Text>
+            </View>
+            
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeValue}>{String(timeElapsed.minutes).padStart(2, '0')}</Text>
+              <Text style={styles.timeLabel}>MIN</Text>
+            </View>
+            
+            <View style={styles.timeBlock}>
+              <Text style={styles.timeValue}>{String(timeElapsed.seconds).padStart(2, '0')}</Text>
+              <Text style={styles.timeLabel}>SEC</Text>
             </View>
           </View>
-        ))}
-      </View>
-      
-      <View style={styles.content}>
-        <Text style={styles.label}>NoContact 🐼</Text>
-        <Text style={styles.title}>You've stayed strong for</Text>
-        
-        <View style={styles.timeContainer}>
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeValue}>{String(timeElapsed.months).padStart(2, '0')}</Text>
-            <Text style={styles.timeLabel}>MO</Text>
-          </View>
           
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeValue}>{String(timeElapsed.days).padStart(2, '0')}</Text>
-            <Text style={styles.timeLabel}>DAYS</Text>
-          </View>
-          
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeValue}>{String(timeElapsed.hours).padStart(2, '0')}</Text>
-            <Text style={styles.timeLabel}>HRS</Text>
-          </View>
-          
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeValue}>{String(timeElapsed.minutes).padStart(2, '0')}</Text>
-            <Text style={styles.timeLabel}>MIN</Text>
-          </View>
-          
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeValue}>{String(timeElapsed.seconds).padStart(2, '0')}</Text>
-            <Text style={styles.timeLabel}>SEC</Text>
+          <View style={styles.characterContainer}>
+            <Image 
+              source={require('@/assets/home/zen_panda.png')} 
+              style={styles.zenPanda}
+              resizeMode="contain"
+            />
           </View>
         </View>
-        
-        <View style={styles.characterContainer}>
-          <Image 
-            source={require('@/assets/home/zen_panda.png')} 
-            style={styles.zenPanda}
-            resizeMode="contain"
-          />
-        </View>
-      </View>
-    </ImageBackground>
+      </ImageBackground>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     width: '100%',

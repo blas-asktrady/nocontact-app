@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Platform, Linking, SafeAreaView, StatusBar } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import useUserSettings from '@/hooks/useUserSettings';
 import { useUser } from '@/hooks/useUser';
@@ -135,100 +135,107 @@ const SettingsScreen = () => {
   );
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {/* Share Card */}
-      <View style={styles.shareCard}>
-        <View style={styles.shareContent}>
-          <Text style={styles.shareTitle}>Share NoContact Panda with a friend</Text>
-          <Text style={styles.shareDescription}>
-            Know someone who could benefit from NoContact Panda? Tap to share the app.
-          </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
+        {/* Share Card */}
+        <View style={styles.shareCard}>
+          <View style={styles.shareContent}>
+            <Text style={styles.shareTitle}>Share NoContact Panda with a friend</Text>
+            <Text style={styles.shareDescription}>
+              Know someone who could benefit from NoContact Panda? Tap to share the app.
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.shareButton}
+            onPress={shareApp}
+          >
+            <Text style={styles.shareButtonText}>Share App</Text>
+            <Feather name="arrow-up-right" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={styles.shareButton}
-          onPress={shareApp}
-        >
-          <Text style={styles.shareButtonText}>Share App</Text>
-          <Feather name="arrow-up-right" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
 
-      {/* Preferences Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>PREFERENCES</Text>
-        <SettingsItem
-          emoji="📅"
-          title="Change Initial NoContact Day"
-          hasArrow
-          onPress={() => {
-            if (Platform.OS === 'ios') {
-              setShowDatePicker(true);
-            } else {
-              // For non-iOS devices, generate a random date and update
-              const randomDate = generateRandomDate();
-              updateNoContactDate(randomDate)
-                .then(() => refetchSettings()); // Refetch settings after update
-            }
-          }}
-        />
-        {showDatePicker && (
-          <DateTimePicker
-            value={userSettings?.no_contact_date ? new Date(userSettings.no_contact_date) : new Date()}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
+        {/* Preferences Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PREFERENCES</Text>
+          <SettingsItem
+            emoji="📅"
+            title="Change Initial NoContact Day"
+            hasArrow
+            onPress={() => {
+              if (Platform.OS === 'ios') {
+                setShowDatePicker(true);
+              } else {
+                // For non-iOS devices, generate a random date and update
+                const randomDate = generateRandomDate();
+                updateNoContactDate(randomDate)
+                  .then(() => refetchSettings()); // Refetch settings after update
+              }
+            }}
           />
-        )}
-        <SettingsItem
-          emoji="🔔"
-          title="Notifications"
-          hasToggle
-          value={notificationsEnabled}
-          onValueChange={handleNotificationToggle}
-        />
-      </View>
+          {showDatePicker && (
+            <DateTimePicker
+              value={userSettings?.no_contact_date ? new Date(userSettings.no_contact_date) : new Date()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+            />
+          )}
+          <SettingsItem
+            emoji="🔔"
+            title="Notifications"
+            hasToggle
+            value={notificationsEnabled}
+            onValueChange={handleNotificationToggle}
+          />
+        </View>
 
-      {/* Help Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>HELP</Text>
-        <SettingsItem
-          emoji="❓"
-          title="Support"
-          hasArrow
-          onPress={openEmailSupport}
-        />
-        <SettingsItem
-          emoji="🔒"
-          title="Manage Subscription"
-          hasArrow
-          onPress={openSubscriptionSettings}
-        />
-      </View>
+        {/* Help Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>HELP</Text>
+          <SettingsItem
+            emoji="❓"
+            title="Support"
+            hasArrow
+            onPress={openEmailSupport}
+          />
+          <SettingsItem
+            emoji="🔒"
+            title="Manage Subscription"
+            hasArrow
+            onPress={openSubscriptionSettings}
+          />
+        </View>
 
-      {/* Legal Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>LEGAL</Text>
-        <SettingsItem
-          emoji="📄"
-          title="Terms of Service"
-          hasArrow
-          onPress={() => openExternalURL('https://nocontact.ai/terms-of-service')}
-        />
-        <SettingsItem
-          emoji="🛡️"
-          title="Privacy Policy"
-          hasArrow
-          onPress={() => openExternalURL('https://nocontact.ai/privacy-policy')}
-        />
-      </View>
-    </ScrollView>
+        {/* Legal Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>LEGAL</Text>
+          <SettingsItem
+            emoji="📄"
+            title="Terms of Service"
+            hasArrow
+            onPress={() => openExternalURL('https://nocontact.ai/terms-of-service')}
+          />
+          <SettingsItem
+            emoji="🛡️"
+            title="Privacy Policy"
+            hasArrow
+            onPress={() => openExternalURL('https://nocontact.ai/privacy-policy')}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',

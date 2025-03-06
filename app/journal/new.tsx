@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  View, 
+  Alert,
+  SafeAreaView,
+  Platform,
+  StatusBar
+} from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -150,95 +159,105 @@ export default function NewJournalScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <ThemedText style={styles.title}>
-            {entryId ? 'Edit Journal Entry' : 'New Journal Entry'}
-          </ThemedText>
-        </View>
-        
-        {entryId && (
-          <View style={styles.iconContainer}>
-            <TouchableOpacity 
-              onPress={handleEdit}
-              style={styles.iconButton}
-            >
-              <Feather name="edit-2" size={24} color={styles.title.color} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={handleDelete}
-              style={styles.iconButton}
-            >
-              <Feather name="trash-2" size={24} color={styles.title.color} />
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <ThemedText style={styles.title}>
+              {entryId ? 'Edit Journal Entry' : 'New Journal Entry'}
+            </ThemedText>
           </View>
-        )}
-      </View>
+          
+          {entryId && (
+            <View style={styles.iconContainer}>
+              <TouchableOpacity 
+                onPress={handleEdit}
+                style={styles.iconButton}
+              >
+                <Feather name="edit-2" size={24} color={styles.title.color} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleDelete}
+                style={styles.iconButton}
+              >
+                <Feather name="trash-2" size={24} color={styles.title.color} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
-      <ThemedText style={styles.subtitle}>
-        Write freely about your recovery journey, thoughts, and feelings.
-      </ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Write freely about your recovery journey, thoughts, and feelings.
+        </ThemedText>
 
-      <View style={styles.inputContainer}>
-        <TouchableOpacity 
-          style={styles.inputWrapper}
-          onPress={handleEdit}
-          activeOpacity={0.7}
-        >
-          <TextInput
-            style={[styles.input]}
-            placeholder="Write about your recovery journey, thoughts, and feelings..."
-            placeholderTextColor="#757575" // Darker for better contrast
-            multiline
-            textAlignVertical="top"
-            value={journalEntry}
-            onChangeText={setJournalEntry}
-            editable={false}
-            pointerEvents="none"
-          />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.inputContainer}>
+          <TouchableOpacity 
+            style={styles.inputWrapper}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+            delayPressIn={0}
+          >
+            <TextInput
+              style={[styles.input]}
+              placeholder="Write about your recovery journey, thoughts, and feelings..."
+              placeholderTextColor="#757575" // Darker for better contrast
+              multiline
+              textAlignVertical="top"
+              value={journalEntry}
+              onChangeText={setJournalEntry}
+              editable={false}
+              pointerEvents="none"
+            />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[styles.button, styles.cancelButton]} 
-          onPress={handleCancel}
-        >
-          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.button, 
-            styles.saveButton,
-            journalEntry.trim() === '' && styles.disabledButton
-          ]} 
-          onPress={handleSave}
-          disabled={journalEntry.trim() === ''}
-        >
-          <ThemedText style={[
-            styles.saveButtonText,
-            journalEntry.trim() === '' && styles.disabledButtonText
-          ]}>Save</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </ThemedView>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={[styles.button, styles.cancelButton]} 
+            onPress={handleCancel}
+          >
+            <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[
+              styles.button, 
+              styles.saveButton,
+              journalEntry.trim() === '' && styles.disabledButton
+            ]} 
+            onPress={handleSave}
+            disabled={journalEntry.trim() === ''}
+          >
+            <ThemedText style={[
+              styles.saveButtonText,
+              journalEntry.trim() === '' && styles.disabledButtonText
+            ]}>Save</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
-// Modified styles with improved colors
+// Modified styles with improved colors and SafeAreaView
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff', // This should be handled by ThemedView
     padding: 20,
+    paddingTop: 30, // Increased top padding to prevent title cutoff
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
+    marginTop: 10, // Added top margin for the header
   },
   titleContainer: {
     flex: 1,
@@ -289,7 +308,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#E57373', // More visible red with better contrast
+    backgroundColor: '#FF0000', // Changed to a more prominent red
   },
   saveButton: {
     backgroundColor: '#4B69FF', // Keep the current blue

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { useJournal } from '@/hooks/useJournal';
 import { getUserById } from '@/services/userService';
@@ -70,29 +70,36 @@ const JournalScreen = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Header with title and button */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Journal</Text>
-        <TouchableOpacity style={styles.button} onPress={handleNewEntry}>
-          <Text style={styles.buttonText}>New Entry</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header with title and button */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Journal</Text>
+          <TouchableOpacity style={styles.button} onPress={handleNewEntry}>
+            <Text style={styles.buttonText}>New Entry</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Journal entries list */}
-      <FlatList
-        data={journals}
-        renderItem={renderJournalEntry}
-        keyExtractor={item => item.id}
-        style={styles.list}
-        showsVerticalScrollIndicator={false}
-        extraData={journals}
-      />
-    </View>
+        {/* Journal entries list */}
+        <FlatList
+          data={journals}
+          renderItem={renderJournalEntry}
+          keyExtractor={item => item.id}
+          style={styles.list}
+          showsVerticalScrollIndicator={false}
+          extraData={journals}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
