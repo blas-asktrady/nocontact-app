@@ -44,10 +44,11 @@ export const ChatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Initial load of chats when user is available
     useEffect(() => {
-        if (user?.id) {
+        // Only fetch if explicitly enabled
+        if (user?.id && process.env.ENABLE_CHAT_FETCH === 'true') {
             fetchChats(user.id);
         }
-    }, [user?.id]); // Only re-run when user ID changes
+    }, [user?.id]);
 
     // Function to refresh chats
     const refreshChats = async () => {

@@ -52,6 +52,7 @@ export async function getMessagesForChat(chatId: string, limit: number = 20, off
 }
 
 export async function getChats(userId: string) {
-    const { data } = await apiClient.get('/chat', { params: { userId} })
-    return data
+    // const { data } = await apiClient.get('/chat', { params: { userId } })
+    //return data
+    return []
 }

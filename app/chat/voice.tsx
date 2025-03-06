@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react';
 
 type RootStackParamList = {
   'chat/voice': undefined;
@@ -62,7 +61,7 @@ const VoiceChatScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={navigateBack}>
-          <ChevronLeft size={24} color="#fff" />
+          <Feather name="chevron-left" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.timerContainer}>
           <Text style={styles.timer}>{formatTime(timer)}</Text>

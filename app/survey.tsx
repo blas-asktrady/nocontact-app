@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Image, View, Text, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
-import { ChevronLeft, Bell } from 'lucide-react';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   updateUsername, 
@@ -462,7 +462,7 @@ const SurveyScreen = () => {
       <View style={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton} disabled={isProcessing}>
-            <ChevronLeft size={24} color="#000000" />
+            <Ionicons name="chevron-back" size={24} color="#000000" />
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressBar}>

@@ -3,7 +3,7 @@ import { StyleSheet, TextInput, TouchableOpacity, View, Alert } from 'react-nati
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Feather } from '@expo/vector-icons';
 import { useJournal } from '@/hooks/useJournal';
 
 type RootStackParamList = {
@@ -164,13 +164,13 @@ export default function NewJournalScreen() {
               onPress={handleEdit}
               style={styles.iconButton}
             >
-              <Pencil size={24} color={styles.title.color} />
+              <Feather name="edit-2" size={24} color={styles.title.color} />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={handleDelete}
               style={styles.iconButton}
             >
-              <Trash2 size={24} color={styles.title.color} />
+              <Feather name="trash-2" size={24} color={styles.title.color} />
             </TouchableOpacity>
           </View>
         )}
