@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '50%',
-    backgroundColor: 'rgba(127, 111, 235, 0.8)', // Match the bottom color of the gradient
+    backgroundColor: 'transparent',
     zIndex: 1,
   },
   pandaContainer: {

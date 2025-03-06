@@ -34,12 +34,17 @@ const SurveyScreen = () => {
 
   const [step, setStep] = useState(1);
   const [showPicker, setShowPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const { user, isLoading, signOut } = useUser();
   
   // Add ref to store current user ID to prevent stale values
   const userIdRef = useRef(null);
+  
+  // Add these missing state declarations
+  const [tempDate, setTempDate] = useState<Date | null>(null);
+  const [tempTime, setTempTime] = useState<Date | null>(null);
   
   // When user changes, update the ref
   useEffect(() => {
@@ -54,42 +59,72 @@ const SurveyScreen = () => {
   }, [user]);
 
   const handleDateChange = async (event: any, selectedDate: any) => {
-    setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
-      setIsProcessing(true);
-      setError('');
-      
-      const newDate = selectedDate.toISOString();
-      setAnswers({ ...answers, lastEpisodeDate: newDate });
-      
-      // Use the ref instead of the user object directly
-      const currentUserId = userIdRef.current;
-      
-      if (currentUserId) {
-        try {
-          // Set a timeout to prevent UI from getting stuck
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Request timed out')), 8000)
-          );
-          
-          // Race the actual API call against the timeout
-          await Promise.race([
-            updateLastEpisodeDate(currentUserId, newDate),
-            timeoutPromise
-          ]);
-          
-          console.log('Last episode date updated successfully');
-        } catch (err) {
-          console.error('Failed to update last episode date:', err);
-          setError(err.message || 'Failed to save date. Please try again.');
-        } finally {
-          setIsProcessing(false);
-        }
-      } else {
-        console.error('No user ID available for update');
-        setError('Authentication error. Please try again.');
+      setTempDate(selectedDate);
+    }
+  };
+
+  const handleTimeChange = async (event: any, selectedTime: any) => {
+    if (event.type === 'set' && selectedTime) {
+      setTempTime(selectedTime);
+    }
+  };
+
+  // Add a new function to handle saving the date when the button is clicked
+  const handleSaveDate = async () => {
+    if (!tempDate && !tempTime) return;
+    
+    setShowPicker(false);
+    setShowTimePicker(false);
+    setIsProcessing(true);
+    setError('');
+    
+    // Create a new date object combining the date and time if both are selected
+    let newDate = new Date();
+    
+    if (tempDate) {
+      newDate = new Date(tempDate);
+    } else if (answers.lastEpisodeDate) {
+      newDate = new Date(answers.lastEpisodeDate);
+    }
+    
+    if (tempTime) {
+      newDate.setHours(tempTime.getHours());
+      newDate.setMinutes(tempTime.getMinutes());
+    }
+    
+    const newDateIso = newDate.toISOString();
+    setAnswers({ ...answers, lastEpisodeDate: newDateIso });
+    
+    // Use the ref instead of the user object directly
+    const currentUserId = userIdRef.current;
+    
+    if (currentUserId) {
+      try {
+        // Set a timeout to prevent UI from getting stuck
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timed out')), 8000)
+        );
+        
+        // Race the actual API call against the timeout
+        await Promise.race([
+          updateLastEpisodeDate(currentUserId, newDateIso),
+          timeoutPromise
+        ]);
+        
+        console.log('Last episode date updated successfully');
+      } catch (err) {
+        console.error('Failed to update last episode date:', err);
+        setError(err.message || 'Failed to save date. Please try again.');
+      } finally {
         setIsProcessing(false);
+        setTempDate(null);
+        setTempTime(null);
       }
+    } else {
+      console.error('No user ID available for update');
+      setError('Authentication error. Please try again.');
+      setIsProcessing(false);
     }
   };
 
@@ -213,7 +248,17 @@ const SurveyScreen = () => {
         updatedAnswers.depressionDuration = '';
         break;
       case 3:
-        updatedAnswers.lastEpisodeDate = '';
+        // Don't reset the date for step 3 - use default value instead
+        if (!updatedAnswers.lastEpisodeDate) {
+          updatedAnswers.lastEpisodeDate = new Date().toISOString();
+          
+          // Also update in database
+          const currentUserId = userIdRef.current;
+          if (currentUserId) {
+            updateLastEpisodeDate(currentUserId, updatedAnswers.lastEpisodeDate)
+              .catch(err => console.error('Failed to save default date on skip:', err));
+          }
+        }
         break;
       case 4:
         updatedAnswers.primaryGoal = '';
@@ -273,6 +318,22 @@ const SurveyScreen = () => {
     }
   };
 
+  // Add this useEffect outside of any render functions
+  useEffect(() => {
+    if (step === 3 && !answers.lastEpisodeDate) {
+      // Set default date if step 3 is active and no date is selected yet
+      const defaultDate = new Date().toISOString();
+      setAnswers(prev => ({ ...prev, lastEpisodeDate: defaultDate }));
+      
+      // Also update in database if user has an ID
+      const currentUserId = userIdRef.current;
+      if (currentUserId) {
+        updateLastEpisodeDate(currentUserId, defaultDate)
+          .catch(err => console.error('Failed to save default date:', err));
+      }
+    }
+  }, [step, answers.lastEpisodeDate]);
+
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
       <SupportIcon />
@@ -322,33 +383,112 @@ const SurveyScreen = () => {
     </View>
   );
 
-  const renderStep3 = () => (
-    <View style={styles.stepContainer}>
-      <SupportIcon />
-      <View style={styles.messageContainer}>
-        <Text style={styles.messageText}>When did you break up with your ex?</Text>
+  const renderStep3 = () => {
+    // Initialize with current date/time if nothing is selected
+    const now = new Date();
+    
+    // Use temp values first, then saved values, then default to current date/time
+    const currentDate = tempDate || (answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate) : now);
+    const currentTime = tempTime || (answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate) : now);
+    
+    const hasSelectedDate = answers.lastEpisodeDate || tempDate;
+    const hasNewSelection = tempDate !== null || tempTime !== null;
+    
+    return (
+      <View style={styles.stepContainer}>
+        <SupportIcon />
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>When did you break up with your ex?</Text>
+        </View>
+        
+        <View style={styles.dateTimeContainer}>
+          <TouchableOpacity 
+            style={[
+              styles.dateTimeButton, 
+              showPicker ? styles.activeButton : styles.inactiveButton
+            ]}
+            onPress={() => {
+              setShowPicker(true);
+              setShowTimePicker(false);
+            }}
+          >
+            <Text style={showPicker ? styles.activeButtonText : styles.inactiveButtonText}>
+              {hasSelectedDate ? currentDate.toLocaleDateString() : now.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[
+              styles.dateTimeButton, 
+              showTimePicker ? styles.activeButton : styles.inactiveButton
+            ]}
+            onPress={() => {
+              setShowTimePicker(true);
+              setShowPicker(false);
+            }}
+          >
+            <Text style={showTimePicker ? styles.activeButtonText : styles.inactiveButtonText}>
+              {answers.lastEpisodeDate || tempTime ? 
+                currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+                now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Always show one of the pickers */}
+        {showPicker && (
+          <DateTimePicker
+            value={currentDate}
+            mode="date"
+            display="spinner"
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+            themeVariant="light"
+            textColor="#000000"
+          />
+        )}
+        
+        {showTimePicker && (
+          <DateTimePicker
+            value={currentTime}
+            mode="time"
+            display="spinner"
+            onChange={handleTimeChange}
+            themeVariant="light"
+            textColor="#000000"
+          />
+        )}
+        
+        {/* If neither picker is showing, default to date picker */}
+        {!showPicker && !showTimePicker && (
+          <>
+            {setShowPicker(true)}
+            <DateTimePicker
+              value={currentDate}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+              themeVariant="light"
+              textColor="#000000"
+            />
+          </>
+        )}
+        
+        {hasNewSelection && (
+          <TouchableOpacity 
+            style={styles.saveDateButton}
+            onPress={handleSaveDate}
+            disabled={isProcessing}
+          >
+            <Text style={styles.saveDateButtonText}>
+              {isProcessing ? 'Saving...' : 'Save New Date'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
-      <TouchableOpacity 
-        style={styles.dateButton}
-        onPress={() => setShowPicker(true)}
-        disabled={isProcessing}
-      >
-        <Text style={styles.dateButtonText}>Pick date</Text>
-      </TouchableOpacity>
-      <Text style={styles.dateText}>
-        {answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate).toLocaleDateString() : ''}
-      </Text>
-      {showPicker && (
-        <DateTimePicker
-          value={answers.lastEpisodeDate ? new Date(answers.lastEpisodeDate) : new Date()}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
-      )}
-    </View>
-  );
+    );
+  };
 
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
@@ -385,8 +525,8 @@ const SurveyScreen = () => {
         </Text>
       </View>
       <View style={styles.notificationPreviewContainer}>
-        <Text style={[styles.notificationPreview, { fontSize: 96 }]}>
-          🧘
+        <Text style={styles.notificationEmoji}>
+          🧘‍♀️
         </Text>
       </View>
       <View style={styles.choiceContainer}>
@@ -564,21 +704,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
-  dateButton: {
-    backgroundColor: '#6a77e3',
+  dateTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  dateTimeButton: {
+    flex: 1,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
   },
-  dateButtonText: {
+  activeButton: {
+    backgroundColor: '#6a77e3',
+  },
+  inactiveButton: {
+    backgroundColor: '#F3F4F6',
+  },
+  activeButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  inactiveButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1F2937',
+  },
+  saveDateButton: {
+    backgroundColor: '#6a77e3',
+    padding: 16,
+    borderRadius: 100,
+    alignItems: 'center',
+    marginTop: 16,
+    marginHorizontal: 20,
+  },
+  saveDateButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  dateText: {
-    fontSize: 16,
-    color: '#6B7280',
   },
   goalOptionsContainer: {
     gap: 12,
@@ -601,10 +766,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 24,
   },
-  notificationPreview: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    lineHeight: 32,
+  notificationEmoji: {
+    fontSize: 80,
+    lineHeight: 100,
   },
   choiceContainer: {
     flexDirection: 'row',
